@@ -285,7 +285,8 @@ def supplement_assets(spec, cache, offline):
             notices.update(derived_notices)
         elif row.get("asset_type") == "embedded-ofl":
             from fontTools.ttLib import TTFont
-            fonts[name] = build.fetch_asset(row, cache, offline)
+            font_source = {"url": row["url"], "sha256": row["sha256"]}
+            fonts[name] = build.fetch_asset(font_source, cache, offline)
             bounds = [int(point, 16) for point in row["exact_cmap_range"]]
             expected = set(range(bounds[0], bounds[1] + 1))
             with TTFont(io.BytesIO(fonts[name]), recalcTimestamp=False) as source:
