@@ -9,7 +9,9 @@ from pathlib import Path
 import re
 import stat
 import tarfile
+import urllib.error
 import urllib.request
+import time
 import zipfile
 
 import build
@@ -40,14 +42,39 @@ def pinned_download(spec, cache, offline, allowed, maximum):
     url = spec["url"]
     build.require(url in allowed, "Unexpected data/source URL")
     local = cache / sha
+    if spec.get("vendored") == "licenses/UNICODE-DATA-LICENSE.txt":
+        data = (HERE / spec["vendored"]).read_bytes()
+        build.require(0 < len(data) <= maximum and build.digest(data) == sha,
+                      "Vendored Unicode license digest mismatch")
+        return data
     if local.exists():
         build.require(0 < local.stat().st_size <= maximum, "Invalid cached data size")
         data = local.read_bytes()
     else:
         build.require(not offline, "Data absent from offline cache: " + sha)
-        with urllib.request.urlopen(url, timeout=60) as f:
-            build.require(f.geturl() == url, "Unexpected data redirect")
-            data = f.read(maximum + 1)
+        mirrors = spec.get("mirrors", [])
+        for mirror in mirrors:
+            build.require(
+                (build.approved_asset_url(mirror) and mirror.startswith(
+                    "https://raw.githubusercontent.com/unicode-org/unicodetools/"))
+                or any(mirror == origin.replace("www.", "") for origin in UCD_FILES),
+                "Unexpected pinned download mirror",
+            )
+        candidates = [*mirrors[:1], url, *mirrors[1:]] if mirrors else [url, url, url]
+        errors = []
+        for index, candidate in enumerate(candidates):
+            try:
+                with urllib.request.urlopen(candidate, timeout=28) as f:
+                    build.require(f.geturl() == candidate, "Unexpected data redirect")
+                    data = f.read(maximum + 1)
+                build.require(0 < len(data) <= maximum and build.digest(data) == sha, "Data digest mismatch")
+                break
+            except (OSError, ValueError) as error:
+                errors.append(f"{candidate}: {error}")
+                if index + 1 < len(candidates):
+                    time.sleep(index + 1)
+        else:
+            raise ValueError("Pinned source unavailable: " + "; ".join(errors))
     build.require(0 < len(data) <= maximum and build.digest(data) == sha,
                   "Data digest mismatch: " + url)
     if not local.exists():
@@ -224,12 +251,24 @@ def unifont_license(spec, cache, offline):
 
 
 def supplement_assets(spec, cache, offline):
-    rows, fonts, notices = spec["fonts"], {}, {}
+    rows, fonts, notices, provenance = spec["fonts"], {}, {}, {}
     for row in rows:
         name = build.safe_name(row["filename"], build.SAFE_FILE)
         license_name = build.safe_name(row["license"], build.SAFE_FILE)
         build.require(name not in fonts, "Duplicate supplement font path")
-        if row.get("asset_type") == "unifont":
+        if row.get("asset_type") == "kaiyuan-reviewed":
+            import reviewed_seal
+            source = spec["kaiyuan_reviewed_source"]
+            archive = pinned_download(source, cache, offline, {reviewed_seal.URL}, 40_000_001)
+            fonts[name], derived_notices, approval = reviewed_seal.make_font(archive)
+            build.require(build.digest(fonts[name]) == row["sha256"], "Reviewed Seal deterministic font digest changed")
+            build.require(build.digest(approval) == source["approval_file_sha256"],
+                          "Reviewed Seal approval digest changed")
+            provenance["Kaiyuan-approved.csv"] = approval
+            for extra, digest in source["upstream_notices"].items():
+                build.require(build.digest(derived_notices[extra]) == digest, "Reviewed Seal upstream notice digest changed")
+            notices.update(derived_notices)
+        elif row.get("asset_type") == "unifont":
             fonts[name] = pinned_download(row, cache, offline, UNIFONT_FILES, build.MAX_ASSET)
             if license_name not in notices:
                 notices[license_name] = unifont_license(spec, cache, offline)
@@ -238,7 +277,7 @@ def supplement_assets(spec, cache, offline):
             notices[license_name] = build.fetch_asset({"url": row["license_url"], "sha256": row["license_sha256"]}, cache, offline)
         build.require(build.digest(notices[license_name]) == row["license_sha256"], "Supplement license mismatch")
         build.require(b"SIL OPEN FONT LICENSE" in notices[license_name].upper(), "Supplement license is not OFL")
-    return fonts, notices
+    return fonts, notices, provenance
 
 
 def load_module_inputs(package):
@@ -246,7 +285,9 @@ def load_module_inputs(package):
     rows = spec["fonts"]
     require_paths = {f"fonts/{row['filename']}": row["sha256"] for row in rows}
     require_paths.update({f"licenses/{row['license']}": row["license_sha256"] for row in rows})
-    extra = {"README.txt", "SOURCES.json", REPORT_FILE, "licenses/LICENSE-UNICODE.txt"}
+    additional_notices = spec["kaiyuan_reviewed_source"]["upstream_notices"]
+    require_paths.update({f"licenses/{name}": sha for name, sha in additional_notices.items()})
+    extra = {"README.txt", "SOURCES.json", REPORT_FILE, "licenses/LICENSE-UNICODE.txt", "provenance/Kaiyuan-approved.csv"}
     build.require(package.stat().st_size <= 2 * build.MAX_ASSET, "Supplement archive too large")
     with zipfile.ZipFile(package) as z:
         infos = z.infolist()
@@ -264,7 +305,7 @@ def load_module_inputs(package):
     local_rows = [row for row in rows if row.get("mount", True)]
     return (local_rows,
             {row["filename"]: fonts[row["filename"]] for row in local_rows},
-            {row["license"]: licenses[row["license"]] for row in local_rows})
+            {name: licenses[name] for name in {row["license"] for row in local_rows} | set(additional_notices)})
 
 
 def main():
@@ -280,7 +321,7 @@ def main():
     spec = lock()
     data = {name: pinned_download(entry, args.cache, args.offline, UCD_FILES, 5 * 1024 * 1024) for name, entry in spec["data"].items()}
     _, baseline, _, _ = build.sources("op13-full", args.cache, args.offline)
-    supplement, notices = supplement_assets(spec, args.cache, args.offline)
+    supplement, notices, provenance = supplement_assets(spec, args.cache, args.offline)
     report = audit(spec, data, baseline, supplement)
     if args.seal_reference:
         ref = spec["seal_reference_only"]
@@ -305,6 +346,7 @@ def main():
     build.pack(args.out / name, {
         **{f"fonts/{filename}": value for filename, value in supplement.items()},
         **{f"licenses/{filename}": value for filename, value in notices.items()},
+        **{f"provenance/{filename}": value for filename, value in provenance.items()},
         "licenses/LICENSE-UNICODE.txt": data["LICENSE-UNICODE.txt"],
         REPORT_FILE: build.encode_json(report),
         "SOURCES.json": build.encode_json(spec),

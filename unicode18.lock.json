@@ -4,19 +4,32 @@
   "data": {
     "DerivedAge.txt": {
       "url": "https://www.unicode.org/Public/18.0.0/ucd/DerivedAge.txt",
-      "sha256": "58b04334e3a31f9612694bbc3f6bff4a302b7d424565bca9c47e30aa74f8dbac"
+      "sha256": "58b04334e3a31f9612694bbc3f6bff4a302b7d424565bca9c47e30aa74f8dbac",
+      "mirrors": [
+        "https://raw.githubusercontent.com/unicode-org/unicodetools/725fb6055cd42915c74bcf77b91aa8fb8ef18669/unicodetools/data/ucd/18.0.0/DerivedAge.txt",
+        "https://unicode.org/Public/18.0.0/ucd/DerivedAge.txt"
+      ]
     },
     "UnicodeData.txt": {
       "url": "https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt",
-      "sha256": "0736451de439ae7baf1425136617da495e09ee5afbe6e394374db7009ea08950"
+      "sha256": "0736451de439ae7baf1425136617da495e09ee5afbe6e394374db7009ea08950",
+      "mirrors": [
+        "https://raw.githubusercontent.com/unicode-org/unicodetools/725fb6055cd42915c74bcf77b91aa8fb8ef18669/unicodetools/data/ucd/18.0.0/UnicodeData.txt",
+        "https://unicode.org/Public/18.0.0/ucd/UnicodeData.txt"
+      ]
     },
     "Blocks.txt": {
       "url": "https://www.unicode.org/Public/18.0.0/ucd/Blocks.txt",
-      "sha256": "a58f8d322f3c5e254f9f97b1cbf76a454a7e02de6ac35619a5e4f27aaabfd553"
+      "sha256": "a58f8d322f3c5e254f9f97b1cbf76a454a7e02de6ac35619a5e4f27aaabfd553",
+      "mirrors": [
+        "https://raw.githubusercontent.com/unicode-org/unicodetools/725fb6055cd42915c74bcf77b91aa8fb8ef18669/unicodetools/data/ucd/18.0.0/Blocks.txt",
+        "https://unicode.org/Public/18.0.0/ucd/Blocks.txt"
+      ]
     },
     "LICENSE-UNICODE.txt": {
       "url": "https://www.unicode.org/license.txt",
-      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "vendored": "licenses/UNICODE-DATA-LICENSE.txt"
     }
   },
   "fonts": [
@@ -59,6 +72,17 @@
       "sha256": "472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391",
       "license": "GNU-Unifont-18.0.01-OFL-1.1.txt",
       "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+    },
+    {
+      "family": "fontroutes-open-seal-reviewed",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutesReviewedSeal-Regular.ttf",
+      "asset_type": "kaiyuan-reviewed",
+      "sha256": "f667d81b192de7a0043272b30eec695b397fb3353a8c90a856036331e2324912",
+      "license": "Kaiyuan-OFL.txt",
+      "license_sha256": "5c23557c389eabd42513b7a7bf2418879e1923f0c54d448b5f2805050fe85547",
+      "provenance": "Deterministically compiled from 1,197 human-approved historical public-domain source traces only; see approval source and notices."
     }
   ],
   "seal_reference_only": {
@@ -75,5 +99,15 @@
     "sha256": "eab60847aac34c8768765cecc7821faf50de2636187b452b9b5fa50a12b00bc3",
     "member": "unifont-18.0.01/OFL-1.1.txt",
     "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+  },
+  "kaiyuan_reviewed_source": {
+    "url": "https://codeload.github.com/frankslin/kaiyuan-small-seal-font/tar.gz/97433695858330ec9fdb7de9c4604da2f635eba6",
+    "sha256": "6249a03976bb0f3bc2fb5d13185d909b3444c1f90b8a7d56dfe8629d1d56577a",
+    "approved": 1197,
+    "approval_file_sha256": "826ca3d6a995b0d4c9d1dbc12e23431fe752671e61e4dd6b2f436ea17f1d10ba",
+    "upstream_notices": {
+      "Kaiyuan-THIRD-PARTY-NOTICES.md": "48bd455d80301c62c08256ba580f5cb193955f3a70f4ae49b519a04a03081c2e",
+      "Kaiyuan-Unicode-Data-License.txt": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+    }
   }
 }
