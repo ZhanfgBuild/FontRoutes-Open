@@ -16,6 +16,8 @@ from collections import defaultdict
 from pathlib import Path
 from xml.parsers import expat
 
+from logo_fallback import LOGO_OUT, POSTSCRIPT as LOGO_PS
+
 HERE = Path(__file__).resolve().parent
 # Read the literal model or codename returned by ro.product.device, not by guessing the market.
 DEVICES = {
@@ -241,7 +243,7 @@ def inspect_xml(xml):
     return close, names, family_count
 
 
-def add_families(xml, rows):
+def add_families(xml, rows, include_logo=False):
     at, names, count = inspect_xml(xml)
     families = defaultdict(list)
     for row in rows:
@@ -257,11 +259,19 @@ def add_families(xml, rows):
         for weight, style, name in sorted(fonts):
             lines.append(f'    <font weight="{weight}" style="{style}">{name}</font>')
         lines.append("  </family>")
+    if include_logo:
+        require(LOGO_OUT.encode() not in xml, "ROM already references the local compatibility font; disable the old module")
+        lines.extend([
+            "  <!-- Local, appended fallback: one U+F8FF glyph, no OEM family reordering -->",
+            "  <family>",
+            f'    <font weight="400" style="normal" postScriptName="{LOGO_PS}">{LOGO_OUT}</font>',
+            "  </family>",
+        ])
     lines.append("")
     inserted = "\n".join(lines).encode("ascii")
     output = xml[:at] + inserted + xml[at:]
     _, new_names, new_count = inspect_xml(output)
-    require(new_names == names | set(families) and new_count == count + len(families), "XML post-check failed")
+    require(new_names == names | set(families) and new_count == count + len(families) + int(include_logo), "XML post-check failed")
     return output
 
 
@@ -341,7 +351,7 @@ def validate_rom(args, rows):
     raw = args.rom_xml.read_bytes()
     expected = safe_name(args.rom_xml_sha256, SHA)
     require(digest(raw) == expected, "Local ROM XML SHA-256 mismatch")
-    draft_xml = add_families(raw, rows)
+    draft_xml = add_families(raw, rows, include_logo=not args.no_logo_fallback)
     return draft_xml, digest(fingerprint), expected
 
 
@@ -354,6 +364,8 @@ def doctor(args):
             cache = Path(stage)
             checked_input_zip(args.inputs_zip, args.profile, cache)
             sources(args.profile, cache, True)
+    if args.logos_zip:
+        get_library_inputs("logos", args.cache, True, args.logos_zip)
     print(encode_json({
         "status": "offline-preflight-passed",
         "profile": args.profile,
@@ -361,6 +373,8 @@ def doctor(args):
         "rom_config": ROM_CONFIGS[args.rom_config],
         "input_zip": "locked fonts/licenses verified" if args.inputs_zip else "not supplied; not verified",
         "kernel_su_backend": args.mount_backend,
+        "logo_fallback": ("disabled" if args.no_logo_fallback else
+                          "one F8FF glyph appended after OEM fallback; runtime selection unverified"),
         "mount_status": "unverified; reboot and inspect on the phone",
         "checks": [
             "device and SDK allowlists",
@@ -374,11 +388,37 @@ def doctor(args):
     }).decode(), end="")
 
 
+def library_spec(kind):
+    return json.loads((HERE / "fonts.lock.json").read_text("utf-8"))["libraries"][kind]
+
+
+def get_library_inputs(kind, cache, offline, package=None):
+    spec = library_spec(kind)
+    if not package:
+        return fetch_asset(spec["font"], cache, offline), fetch_asset(spec["license"], cache, offline)
+    require(kind == "logos", "Only the standalone Brands ZIP can supply the local logo source")
+    require(package.stat().st_size <= 2 * MAX_ASSET, "Brands input ZIP too large")
+    paths = (f"fonts/{safe_name(spec['font']['filename'], SAFE_FILE)}", "licenses/UPSTREAM-LICENSE.txt")
+    with zipfile.ZipFile(package) as z:
+        entries = z.infolist()
+        require(len(entries) == 4 and {info.filename for info in entries} ==
+                {*paths, "SOURCES.json", "README.txt"}, "Unexpected Brands ZIP entries")
+        checked = []
+        for path, item in zip(paths, (spec["font"], spec["license"]), strict=True):
+            info = z.getinfo(path)
+            require(0 < info.file_size <= MAX_ASSET and not info.flag_bits & 1
+                    and stat.S_ISREG(info.external_attr >> 16), "Invalid Brands ZIP member")
+            data = z.read(info)
+            require(digest(data) == item["sha256"], "Brands ZIP SHA-256 mismatch")
+            checked.append(data)
+    return tuple(checked)
+
+
 def public_library(args):
     """Standalone app-use library; excluded from both public profiles and root ZIPs."""
     kind = args.mode
-    spec = json.loads((HERE / "fonts.lock.json").read_text("utf-8"))["libraries"][kind]
-    font = fetch_asset(spec["font"], args.cache, args.offline)
+    spec = library_spec(kind)
+    font, lic = get_library_inputs(kind, args.cache, args.offline)
     require(font[:4] in (b"OTTO", b"\x00\x01\x00\x00"), "Library asset is not OpenType")
     lic = fetch_asset(spec["license"], args.cache, args.offline)
     require(b"SIL OPEN FONT LICENSE" in lic.upper(), "Library lacks expected OFL")
@@ -409,6 +449,17 @@ def local_profile(args, base, rows, fonts):
     require(args.i_accept_local_rom_overlay, "Local ROM overlay requires explicit opt-in")
     xml, fingerprint_digest, expected_hash = validate_rom(args, rows)
     base[f"system/etc/{args.rom_config}"] = xml
+    if not args.no_logo_fallback:
+        from logo_fallback import derive
+        brand, notice = get_library_inputs("logos", args.cache, args.offline, args.logos_zip)
+        fonts = {**fonts, LOGO_OUT: derive(brand)}
+        base["licenses/Font-Awesome-LICENSE.txt"] = notice
+        base["licenses/Compatibility-Mark-MODIFICATIONS.txt"] = (
+            b"Unmodified glyph outline from the Apple-representing U+F179 entry in Font Awesome Free 7.3.1 Brands. "
+            b"Subset and remapped to U+F8FF only; modified font family/CFF names. SIL OFL 1.1; see upstream notice. "
+            b"The underlying mark is a third-party trademark. No trademark license or endorsement is implied. "
+            b"Local ROM-bound ZIP only; do not redistribute.\n"
+        )
     base.update({f"system/fonts/{name}": data for name, data in fonts.items()})
     system_files = {k: data for k, data in base.items() if k.startswith("system/")}
     base["STAGING-SHA256SUMS.txt"] = "".join(
@@ -439,6 +490,8 @@ def main():
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--inputs-zip", type=Path, help="Selected public inputs ZIP for offline local assembly")
+    parser.add_argument("--logos-zip", type=Path, help="Verified standalone Brands ZIP as an offline local logo source")
+    parser.add_argument("--no-logo-fallback", action="store_true", help="Keep OEM font routing exactly as-is for U+F8FF")
     parser.add_argument("--rom-config", choices=ROM_CONFIGS, default="font_fallback.xml")
     parser.add_argument("--confirm-api35-active-config", action="store_true",
                         help="Android 15 uses a runtime flag: independently confirm the selected ROM actually reads this path")
@@ -453,7 +506,8 @@ def main():
     parser.add_argument("--i-accept-local-rom-overlay", action="store_true")
     args = parser.parse_args()
     default_args = (args.rom_config == "font_fallback.xml" and args.mount_backend == "ksu-metamodule"
-                    and not args.confirm_legacy_rom_path and not args.confirm_api35_active_config)
+                    and not args.confirm_legacy_rom_path and not args.confirm_api35_active_config
+                    and not args.no_logo_fallback and args.logos_zip is None)
     if args.mode in ("inputs", "logos", "emoji"):
         require(default_args and not any((args.rom_xml, args.rom_xml_sha256, args.product, args.sdk,
                                         args.fingerprint_file, args.i_accept_local_rom_overlay, args.inputs_zip)),
@@ -468,6 +522,7 @@ def main():
         require(args.profile is not None, "Choose a local device profile")
         require(all((args.rom_xml, args.rom_xml_sha256, args.product, args.sdk, args.fingerprint_file)),
                 "Local preflight needs complete device arguments")
+        require(not (args.no_logo_fallback and args.logos_zip), "Brands ZIP cannot be supplied when logo fallback is disabled")
         if args.mode == "doctor":
             require(args.out is None and not args.i_accept_local_rom_overlay and not args.offline,
                     "Doctor never creates a module or writes output files; omit build-only flags")

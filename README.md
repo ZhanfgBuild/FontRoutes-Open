@@ -41,8 +41,10 @@ The Font Awesome Brands archive is a **standalone, opt-in app asset**. The
 font's open license does not grant rights to third-party trademarks. Use
 individual marks only to represent their owners; do not imply affiliation.
 See [Font Awesome's license](https://github.com/FortAwesome/Font-Awesome/blob/14c65a3747d0f3b751f15831fc719236aea8729d/LICENSE.txt).
-Neither the brand font nor Noto Emoji 2D is included in either phone profile or
-the mounted module; there is no system PUA aliasing or default Emoji replacement.
+Neither the full Brands font nor Noto Emoji 2D is included in either
+phone profile or mounted module. Local assembly derives only the single
+compatibility mark described below; there is no system-wide logo library or
+default Emoji replacement.
 The 3D build and manufacturer-specific logo/fallback libraries are out of scope.
 
 ## Optional: assemble a private local test module
@@ -107,8 +109,17 @@ both files.
 
 ### 2. Assemble, then verify separately
 
-Only after preflight, rerun the same command with `local-module` in place of
-`doctor` and add `--i-accept-local-rom-overlay`. The output is an explicit
+Only after preflight, prepare the optional Python environment for the default
+logo fallback:
+
+```sh
+python3 -m venv .logo-venv
+.logo-venv/bin/python -m pip install -r requirements-logo.txt
+```
+
+Then rerun the same preflight arguments with `.logo-venv/bin/python build.py
+local-module` in place of `python3 build.py doctor`, and add
+`--i-accept-local-rom-overlay`. The output is an explicit
 `local-dist/*-LOCAL-DO-NOT-SHARE-*.zip`. Do not install it unless you accept
 local test risk and can recover. The installer stages only and verifies the
 selected ROM, manager, compatible product/SDK, backend marker, distinct
@@ -133,3 +144,24 @@ flashed.
 References: [AOSP font fallback](https://source.android.com/docs/core/fonts/custom-font-fallback),
 [KernelSU module guide](https://kernelsu.org/guide/module.html), and
 [KernelSU mounting requirements](https://kernelsu.org/guide/metamodule.html).
+
+### Local U+F8FF compatibility mark
+
+Both profiles append one **unnamed** fallback family after the existing ROM
+families by default. The font contains only U+F8FF in its two Unicode cmaps and
+comes from the exact pinned Font Awesome Free Brands 7.3.1 U+F179 outline.
+Neither U+F179 nor ASCII is routed through the generated font. Existing ROM
+XML and family order are kept, so an earlier OEM glyph can win. Apps may also
+choose their own fonts or a different fallback route. Confirm on-device with
+a normal text app and representative ASCII, missing-glyph and U+F8FF samples;
+a successful pack is not a rendering test.
+
+The subset has a new FontRoutes name, bundled upstream OFL notice and separate
+trademark and modification notice. No official Apple font is used, and no
+trademark right or affiliation is implied. Only the local ROM-bound ZIP
+contains this subset; no derivative font or ROM file is uploaded by CI.
+
+To assemble without network, provide both the matching `--inputs-zip` and
+`--logos-zip dist/FontRoutes-Open-logos-brand-use-0.2.0.zip`, and add
+`--offline` in local-module mode. To leave U+F8FF behavior untouched (and avoid
+the Python dependency), add `--no-logo-fallback` and omit `--logos-zip`.

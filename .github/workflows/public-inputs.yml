@@ -50,6 +50,15 @@ jobs:
           else
             python3 build.py "$MODE"
           fi
+      - name: Check exact one-codepoint local logo derivative
+        if: matrix.mode == 'logos'
+        env:
+          FONTROUTES_INTEGRATION_ASSETS: "1"
+        run: |
+          set -euo pipefail
+          python3 -m venv .logo-venv
+          .logo-venv/bin/python -m pip install -r requirements-logo.txt
+          .logo-venv/bin/python -m unittest discover -s tests -p test_logo_fallback.py -v
       - name: Upload only public inputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
