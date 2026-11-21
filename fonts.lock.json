@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "family": "fontroutes-open-sans",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutesOpen-NotoSans-Regular.ttf",
+      "profiles": [
+        "op13-full",
+        "op6-slim"
+      ],
+      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
+      "sha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
+      "license": "NotoSans-OFL-1.1.txt"
+    },
+    {
+      "family": "fontroutes-open-sans",
+      "style": "normal",
+      "weight": 700,
+      "filename": "FontRoutesOpen-NotoSans-Bold.ttf",
+      "profiles": [
+        "op13-full"
+      ],
+      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-Bold.ttf",
+      "sha256": "c976e4b1b99edc88775377fcc21692ca4bfa46b6d6ca6522bfda505b28ff9d6a",
+      "license": "NotoSans-OFL-1.1.txt"
+    },
+    {
+      "family": "fontroutes-open-mono",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutesOpen-NotoSansMono-Regular.ttf",
+      "profiles": [
+        "op13-full"
+      ],
+      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSansMono/NotoSansMono-Regular.ttf",
+      "sha256": "d9e2b23d19f8230be7146f409a52b1d23117e635e28f2e2892cf91b7382f325b",
+      "license": "NotoSans-OFL-1.1.txt"
+    },
+    {
+      "family": "fontroutes-open-cjk-sc",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutesOpen-NotoSansCJKsc-Regular.otf",
+      "profiles": [
+        "op13-full",
+        "op6-slim"
+      ],
+      "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf",
+      "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+      "license": "NotoSansCJK-OFL-1.1.txt"
+    },
+    {
+      "family": "fontroutes-open-math",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutesOpen-STIXTwoMath-Regular.ttf",
+      "profiles": [
+        "op13-full"
+      ],
+      "url": "https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/stixtwomath/STIXTwoMath-Regular.ttf",
+      "sha256": "562551b15b836e6e01d1b7350909baf3c8c8d83260c1190fbf4544333e6936de",
+      "license": "STIXTwoMath-OFL-1.1.txt"
+    }
+  ],
+  "licenses": {
+    "NotoSans-OFL-1.1.txt": {
+      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/LICENSE",
+      "sha256": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb"
+    },
+    "NotoSansCJK-OFL-1.1.txt": {
+      "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/LICENSE",
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    "STIXTwoMath-OFL-1.1.txt": {
+      "url": "https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/stixtwomath/OFL.txt",
+      "sha256": "0c8825913b60d858aacdb33c4ca6660a7d64b0d6464702efbb19313f5765861a"
+    }
+  }
+}

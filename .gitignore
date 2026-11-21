@@ -1,0 +1,9 @@
+/.cache/
+/dist/
+/local-dist/
+/rom/
+__pycache__/
+*.pyc
+*.zip
+*.ttf
+*.otf
