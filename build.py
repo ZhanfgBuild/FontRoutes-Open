@@ -9,6 +9,7 @@ import re
 import stat
 import sys
 import tempfile
+import urllib.parse
 import urllib.request
 import zipfile
 from collections import defaultdict
@@ -21,10 +22,14 @@ DEVICES = {
     "op13-full": ({"PJZ110", "CPH2649", "CPH2653", "CPH2655", "OP5D0DL1", "dodge", "OnePlus13"}, {35, 36, 37}),
     "op6-slim": ({"A6000", "A6003", "enchilada", "OnePlus6"}, {37}),
 }
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 MAX_ASSET = 40 * 1024 * 1024
+MAX_RELEASE_ARCHIVE = 130 * 1024 * 1024
 MAX_XML = 2 * 1024 * 1024
 ROM_PATH = "/system/etc/font_fallback.xml"
+ROM_CONFIGS = {"font_fallback.xml": ROM_PATH, "fonts.xml": "/system/etc/fonts.xml"}
+MOUNT_BACKENDS = ("ksu-metamodule", "ksu-legacy-unverified")
+META_MOUNT_MARKER = "/data/adb/metamodule/metamount.sh"
 SHA = r"[0-9a-f]{64}"
 SAFE_FILE = r"[A-Za-z0-9][A-Za-z0-9_.-]{0,100}"
 SAFE_FAMILY = r"fontroutes-open-[a-z0-9-]{1,32}"
@@ -51,26 +56,70 @@ def approved_asset_url(url):
     )) and not {"..", "."}.intersection(url.split("/"))
 
 
-def fetch_asset(spec, cache, offline=False):
-    sha = safe_name(spec["sha256"], SHA)
-    url = spec["url"]
-    require(approved_asset_url(url), "Source URL must use a pinned public commit")
-    target = cache / sha
-    if target.exists():
-        require(target.stat().st_size <= MAX_ASSET, "Cached input too large")
-        data = target.read_bytes()
-        require(digest(data) == sha, f"Cached input SHA-256 mismatch: {sha}")
-        return data
-    require(not offline, f"Offline source is missing: {sha}")
-    with urllib.request.urlopen(url, timeout=60) as response:
-        require(response.geturl() == url, "Unexpected asset redirect")
-        data = response.read(MAX_ASSET + 1)
-    require(0 < len(data) <= MAX_ASSET and digest(data) == sha, f"Source SHA-256 mismatch: {url}")
+def approved_release_url(url):
+    """Official asset URL with checked-in digest; a tag alone is not a content pin."""
+    return bool(re.fullmatch(
+        r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/releases/download/[A-Za-z0-9_.+-]+/[A-Za-z0-9_.+-]+",
+        url,
+    )) and not {".", ".."}.intersection(url.split("/"))
+
+
+def store_checked(data, sha, cache):
     cache.mkdir(parents=True, exist_ok=True)
+    target = cache / sha
     with tempfile.NamedTemporaryFile(dir=cache, delete=False) as handle:
         handle.write(data)
         tmp = handle.name
     os.replace(tmp, target)
+
+
+def fetch_verified(url, sha, cache, offline, maximum, release=False):
+    sha = safe_name(sha, SHA)
+    require(approved_release_url(url) if release else approved_asset_url(url), "Source URL is not an allowed official pin")
+    target = cache / sha
+    if target.exists():
+        require(0 < target.stat().st_size <= maximum, "Cached input too large or empty")
+        data = target.read_bytes()
+        require(digest(data) == sha, f"Cached input SHA-256 mismatch: {sha}")
+        return data
+    require(not offline, f"Offline source is missing: {sha}")
+    with urllib.request.urlopen(url, timeout=90) as response:
+        endpoint = urllib.parse.urlsplit(response.geturl())
+        require(response.geturl() == url or (
+            release and endpoint.scheme == "https" and endpoint.netloc in
+            {"release-assets.githubusercontent.com", "objects.githubusercontent.com"}
+        ), "Unexpected asset redirect")
+        data = response.read(maximum + 1)
+    require(0 < len(data) <= maximum and digest(data) == sha, f"Source SHA-256 mismatch: {url}")
+    store_checked(data, sha, cache)
+    return data
+
+
+def fetch_asset(spec, cache, offline=False):
+    sha = safe_name(spec["sha256"], SHA)
+    if "member" not in spec:
+        if "asset_type" not in spec or spec["asset_type"] == "raw":
+            return fetch_verified(spec["url"], sha, cache, offline, MAX_ASSET)
+        require(spec["asset_type"] == "release", "Invalid asset type")
+        return fetch_verified(spec["url"], sha, cache, offline, MAX_ASSET, release=True)
+    require(approved_release_url(spec["url"]), "Source release URL is not an allowed official pin")
+    require(all(re.fullmatch(SAFE_FILE, s) for s in spec["member"].split("/")), "Unsafe release member")
+    archive_sha = safe_name(spec["archive_sha256"], SHA)
+    target = cache / sha
+    if target.exists():
+        require(0 < target.stat().st_size <= MAX_ASSET, "Cached member too large or empty")
+        cached = target.read_bytes()
+        require(digest(cached) == sha, f"Cached input SHA-256 mismatch: {sha}")
+        return cached
+    archive = fetch_verified(spec["url"], archive_sha, cache, offline, MAX_RELEASE_ARCHIVE, release=True)
+    with zipfile.ZipFile(io.BytesIO(archive)) as z:
+        matching = [f for f in z.infolist() if f.filename == spec["member"]]
+        require(len(matching) == 1 and 0 < matching[0].file_size <= MAX_ASSET and
+                not matching[0].flag_bits & 1 and not matching[0].is_dir(),
+                "Expected exactly one bounded, unencrypted release member")
+        data = z.read(matching[0])
+    require(digest(data) == sha, f"Release member SHA-256 mismatch: {spec['member']}")
+    store_checked(data, sha, cache)
     return data
 
 
@@ -216,7 +265,24 @@ def add_families(xml, rows):
     return output
 
 
-def installer(product, api, fingerprint_hash, xml_sha, filenames):
+def installer(product, api, fingerprint_hash, xml_sha, filenames,
+              rom_config="font_fallback.xml", mount_backend="ksu-metamodule"):
+    require(rom_config in ROM_CONFIGS, "Unsupported ROM config path")
+    require(mount_backend in MOUNT_BACKENDS, "Unsupported mount backend")
+    require(type(api) is int and 35 <= api <= 37, "Unsupported Android SDK")
+    rom_path = ROM_CONFIGS[rom_config]
+    backend_guard = (
+        f'[ -f "{META_MOUNT_MARKER}" ] && [ -r "{META_MOUNT_MARKER}" ] && '
+        f'[ ! -e "{Path(META_MOUNT_MARKER).parent}/disable" ] && [ ! -e "{Path(META_MOUNT_MARKER).parent}/remove" ] || '
+        'abort "KernelSU system mount provider missing. Verify your installed metamodule, then retry."'
+        if mount_backend == "ksu-metamodule" else
+        'ui_print "Legacy KernelSU mount backend explicitly selected; no metamodule is verified."'
+    )
+    preference_guard = (
+        f'[ ! -e "{ROM_PATH}" ] && [ ! -L "{ROM_PATH}" ] || '
+        'abort "font_fallback.xml exists; refusing legacy fonts.xml overlay."'
+        if rom_config == "fonts.xml" else ':'
+    )
     safe_name(product, SAFE_FILE)
     safe_name(fingerprint_hash, SHA)
     safe_name(xml_sha, SHA)
@@ -225,21 +291,29 @@ def installer(product, api, fingerprint_hash, xml_sha, filenames):
 # install-time check; runs in the module manager, no direct writes to system.
 [ "$BOOTMODE" = true ] && [ "$KSU" = true ] || abort "Use KernelSU Manager; other root managers and recovery are not supported."
 command -v sha256sum >/dev/null 2>&1 || abort "sha256sum is required."
+{backend_guard}
+{preference_guard}
 [ "$(getprop ro.product.device)" = '{product}' ] || abort "Wrong device."
 [ "$(getprop ro.build.version.sdk)" = '{api}' ] || abort "Wrong Android SDK."
 fingerprint="$(getprop ro.build.fingerprint)"
 [ -n "$fingerprint" ] || abort "Build fingerprint unavailable."
 actual="$(printf '%s' "$fingerprint" | sha256sum)" || abort "Unable to hash fingerprint."
 [ "${{actual%% *}}" = '{fingerprint_hash}' ] || abort "ROM build changed."
-[ -r '{ROM_PATH}' ] || abort "ROM font_fallback.xml unavailable."
-actual="$(sha256sum '{ROM_PATH}')" || abort "Unable to hash ROM XML."
+[ -r '{rom_path}' ] || abort "Selected ROM font configuration unavailable."
+actual="$(sha256sum '{rom_path}')" || abort "Unable to hash ROM XML."
 [ "${{actual%% *}}" = '{xml_sha}' ] || abort "ROM XML mismatch; disable competing modules and rebuild."
 for name in {files}; do
-  [ ! -e "/system/fonts/$name" ] || abort "A FontRoutes font is already mounted; disable it and reboot before installing."
+  [ ! -e "/system/fonts/$name" ] && [ ! -L "/system/fonts/$name" ] || abort "A FontRoutes font is already mounted; disable it and reboot before installing."
 done
-[ -s "$MODPATH/system/etc/font_fallback.xml" ] || abort "Staged font XML missing."
+[ -s "$MODPATH/system/etc/{rom_config}" ] || abort "Staged font XML missing."
+for name in {files}; do
+  [ -s "$MODPATH/system/fonts/$name" ] || abort "Staged font payload missing."
+done
+[ -s "$MODPATH/STAGING-SHA256SUMS.txt" ] || abort "Staged checksum manifest missing."
+(cd "$MODPATH" && sha256sum -c STAGING-SHA256SUMS.txt >/dev/null 2>&1) || abort "Staged file integrity check failed."
 ui_print "FontRoutes Open: additive named font families only."
-ui_print "Disable this module before an OTA; verify app selection after reboot."
+ui_print "Staged only. Reboot, then verify the file mounts and app selection."
+ui_print "Disable this module and reboot before an OTA or ROM change."
 '''.encode()
 
 
@@ -250,23 +324,103 @@ def public_profile(args, base, fonts):
     pack(args.out / f"FontRoutes-Open-{args.profile}-inputs-{VERSION}.zip", base)
 
 
-def local_profile(args, base, rows, fonts):
-    require(args.i_accept_local_rom_overlay, "Local ROM overlay requires explicit opt-in")
+def validate_rom(args, rows):
+    """Same offline gates for doctor and assembly; never print/copy raw device identity."""
     devices, versions = DEVICES[args.profile]
-    require(args.product in devices and args.sdk in versions, "Device/SDK not approved for this profile")
+    require(args.product in devices, "Device is outside this profile's allowlist")
+    require(args.sdk in versions, "Android SDK is outside this profile's allowlist")
+    require(args.sdk != 35 or args.confirm_api35_active_config,
+            "Android 15 may choose its parser via a feature flag; explicitly confirm the actual config path")
+    require(args.rom_config != "fonts.xml" or args.confirm_legacy_rom_path,
+            "Legacy fonts.xml requires explicit attestation; use font_fallback.xml if present")
+    require(args.fingerprint_file.stat().st_size <= 1024, "ROM fingerprint input too large")
     fingerprint = args.fingerprint_file.read_bytes().strip()
-    require(len(fingerprint) >= 12 and len(fingerprint) <= 512 and re.fullmatch(rb"[!-~]+", fingerprint), "Invalid ROM fingerprint input")
+    require(12 <= len(fingerprint) <= 512 and re.fullmatch(rb"[!-~]+", fingerprint),
+            "Invalid ROM fingerprint input")
     require(args.rom_xml.stat().st_size <= MAX_XML, "Input XML too large")
     raw = args.rom_xml.read_bytes()
-    expected_hash = safe_name(args.rom_xml_sha256, SHA)
-    require(digest(raw) == expected_hash, "Local ROM XML SHA-256 mismatch")
-    base["system/etc/font_fallback.xml"] = add_families(raw, rows)
+    expected = safe_name(args.rom_xml_sha256, SHA)
+    require(digest(raw) == expected, "Local ROM XML SHA-256 mismatch")
+    draft_xml = add_families(raw, rows)
+    return draft_xml, digest(fingerprint), expected
+
+
+def doctor(args):
+    """Check a supplied snapshot and optional input ZIP; never ADB, mount, or assemble."""
+    rows, _ = profile_lock(args.profile)
+    validate_rom(args, rows)
+    if args.inputs_zip:
+        with tempfile.TemporaryDirectory() as stage:
+            cache = Path(stage)
+            checked_input_zip(args.inputs_zip, args.profile, cache)
+            sources(args.profile, cache, True)
+    print(encode_json({
+        "status": "offline-preflight-passed",
+        "profile": args.profile,
+        "sdk": args.sdk,
+        "rom_config": ROM_CONFIGS[args.rom_config],
+        "input_zip": "locked fonts/licenses verified" if args.inputs_zip else "not supplied; not verified",
+        "kernel_su_backend": args.mount_backend,
+        "mount_status": "unverified; reboot and inspect on the phone",
+        "checks": [
+            "device and SDK allowlists",
+            "matching ROM XML digest",
+            "safe byte-preserving additive named-family transform",
+            "no alias, fallbackFor or family-name collision",
+        ],
+        "next_check": ("Verify an enabled KernelSU metamodule and its system mount support before installation."
+                       if args.mount_backend == "ksu-metamodule" else
+                       "Legacy backend is not validated; compare mounted files after reboot.")
+    }).decode(), end="")
+
+
+def public_library(args):
+    """Standalone app-use library; excluded from both public profiles and root ZIPs."""
+    kind = args.mode
+    spec = json.loads((HERE / "fonts.lock.json").read_text("utf-8"))["libraries"][kind]
+    font = fetch_asset(spec["font"], args.cache, args.offline)
+    require(font[:4] in (b"OTTO", b"\x00\x01\x00\x00"), "Library asset is not OpenType")
+    lic = fetch_asset(spec["license"], args.cache, args.offline)
+    require(b"SIL OPEN FONT LICENSE" in lic.upper(), "Library lacks expected OFL")
+    name = safe_name(spec["font"]["filename"], SAFE_FILE)
+    if kind == "logos":
+        require(b"TRADEMARKS" in lic.upper(), "Brand license lacks trademark notice")
+        tag = "logos-brand-use"
+        notes = (
+            b"Standalone app asset, not a module. Unmodified upstream Font Awesome Brands font. "
+            b"Font license does not grant third-party trademark rights. Use marks to represent their owners; "
+            b"do not imply endorsement. Not installed into system PUA.\n"
+        )
+    else:
+        tag = "emoji-2d-app-use"
+        notes = (
+            b"Standalone app asset, not a module. Unmodified upstream Noto Emoji 2D. "
+            b"No platform font, system emoji or fallback route is replaced.\n"
+        )
+    pack(args.out / f"FontRoutes-Open-{tag}-{VERSION}.zip", {
+        f"fonts/{name}": font,
+        "licenses/UPSTREAM-LICENSE.txt": lic,
+        "SOURCES.json": encode_json(spec),
+        "README.txt": notes,
+    })
+
+
+def local_profile(args, base, rows, fonts):
+    require(args.i_accept_local_rom_overlay, "Local ROM overlay requires explicit opt-in")
+    xml, fingerprint_digest, expected_hash = validate_rom(args, rows)
+    base[f"system/etc/{args.rom_config}"] = xml
     base.update({f"system/fonts/{name}": data for name, data in fonts.items()})
-    base["customize.sh"] = installer(args.product, args.sdk, digest(fingerprint), expected_hash, fonts)
+    system_files = {k: data for k, data in base.items() if k.startswith("system/")}
+    base["STAGING-SHA256SUMS.txt"] = "".join(
+        f"{digest(data)}  {name}\n" for name, data in sorted(system_files.items())).encode()
+    base["MOUNTED-SHA256SUMS.txt"] = "".join(
+        f"{digest(data)}  /{name}\n" for name, data in sorted(system_files.items())).encode()
+    base["customize.sh"] = installer(args.product, args.sdk, fingerprint_digest, expected_hash, fonts,
+                                     args.rom_config, args.mount_backend)
     identifier = f"fontroutes-open-{args.profile}"
     base["module.prop"] = (
         f"id={identifier}\nname=FontRoutes Open ({args.profile}, local ROM only)\n"
-        f"version={VERSION}\nversionCode=100\nauthor=FontRoutes Open contributors\n"
+        f"version={VERSION}\nversionCode=200\nauthor=FontRoutes Open contributors\n"
         "description=Adds opt-in named OFL font families; preserves OEM defaults. Disable before OTA.\n"
     ).encode()
     base["Builder-MIT-LICENSE.txt"] = (HERE / "LICENSE").read_bytes()
@@ -279,12 +433,18 @@ def local_profile(args, base, rows, fonts):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("inputs", "local-module"))
-    parser.add_argument("--profile", choices=DEVICES, required=True)
+    parser.add_argument("mode", choices=("inputs", "local-module", "doctor", "logos", "emoji"))
+    parser.add_argument("--profile", choices=DEVICES)
     parser.add_argument("--cache", type=Path, default=HERE / ".cache")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--inputs-zip", type=Path, help="Selected public inputs ZIP for offline local assembly")
+    parser.add_argument("--rom-config", choices=ROM_CONFIGS, default="font_fallback.xml")
+    parser.add_argument("--confirm-api35-active-config", action="store_true",
+                        help="Android 15 uses a runtime flag: independently confirm the selected ROM actually reads this path")
+    parser.add_argument("--confirm-legacy-rom-path", action="store_true",
+                        help="Locally confirmed ROM actually reads legacy fonts.xml and modern path is absent")
+    parser.add_argument("--mount-backend", choices=MOUNT_BACKENDS, default="ksu-metamodule")
     parser.add_argument("--rom-xml", type=Path)
     parser.add_argument("--rom-xml-sha256")
     parser.add_argument("--product")
@@ -292,12 +452,31 @@ def main():
     parser.add_argument("--fingerprint-file", type=Path)
     parser.add_argument("--i-accept-local-rom-overlay", action="store_true")
     args = parser.parse_args()
-    args.out = args.out or HERE / ("dist" if args.mode == "inputs" else "local-dist")
-    if args.mode == "inputs":
-        require(not any((args.rom_xml, args.rom_xml_sha256, args.product, args.sdk, args.fingerprint_file, args.i_accept_local_rom_overlay, args.inputs_zip)), "Public inputs reject all ROM/device arguments")
+    default_args = (args.rom_config == "font_fallback.xml" and args.mount_backend == "ksu-metamodule"
+                    and not args.confirm_legacy_rom_path and not args.confirm_api35_active_config)
+    if args.mode in ("inputs", "logos", "emoji"):
+        require(default_args and not any((args.rom_xml, args.rom_xml_sha256, args.product, args.sdk,
+                                        args.fingerprint_file, args.i_accept_local_rom_overlay, args.inputs_zip)),
+                "Public inputs reject all ROM/device arguments")
+        args.out = args.out or HERE / "dist"
+        if args.mode in ("logos", "emoji"):
+            require(args.profile is None, "Libraries are standalone; omit the device profile")
+            public_library(args)
+            return
+        require(args.profile is not None, "Choose a public input profile")
     else:
-        require(all((args.rom_xml, args.rom_xml_sha256, args.product, args.sdk, args.fingerprint_file, args.i_accept_local_rom_overlay)), "Local module needs complete device arguments and explicit opt-in")
-        require(not args.out.resolve().is_relative_to((HERE / "dist").resolve()), "Local modules cannot be written to CI's public dist directory")
+        require(args.profile is not None, "Choose a local device profile")
+        require(all((args.rom_xml, args.rom_xml_sha256, args.product, args.sdk, args.fingerprint_file)),
+                "Local preflight needs complete device arguments")
+        if args.mode == "doctor":
+            require(args.out is None and not args.i_accept_local_rom_overlay and not args.offline,
+                    "Doctor never creates a module or writes output files; omit build-only flags")
+            doctor(args)
+            return
+        require(args.i_accept_local_rom_overlay, "Local module needs explicit opt-in")
+        args.out = args.out or HERE / "local-dist"
+        require(not args.out.resolve().is_relative_to((HERE / "dist").resolve()),
+                "Local modules cannot be written to CI's public dist directory")
     if args.inputs_zip:
         with tempfile.TemporaryDirectory() as stage:
             cache = Path(stage)

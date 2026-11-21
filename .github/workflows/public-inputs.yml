@@ -2,7 +2,9 @@ name: Build FontRoutes Open inputs
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -12,29 +14,46 @@ jobs:
   public-inputs:
     name: Build and verify ${{ matrix.edition }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
-          - profile: op13-full
+          - mode: inputs
+            profile: op13-full
+            artifact: op13-full-inputs
             edition: OnePlus 13 Full inputs
-          - profile: op6-slim
+          - mode: inputs
+            profile: op6-slim
+            artifact: op6-slim-inputs
             edition: OnePlus 6 Slim inputs
+          - mode: logos
+            artifact: logos-brand-use
+            edition: Font Awesome Brands standalone
+          - mode: emoji
+            artifact: emoji-2d-app-use
+            edition: Noto Emoji 2D standalone
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - name: Check builder
         run: python3 -m unittest discover -s tests -v
-      - name: Build public pinned font inputs
+      - name: Build verified public fonts or standalone app library
         env:
+          MODE: ${{ matrix.mode }}
           PROFILE: ${{ matrix.profile }}
-        run: python3 build.py inputs --profile "$PROFILE"
+        run: |
+          set -euo pipefail
+          if [ "$MODE" = inputs ]; then
+            python3 build.py inputs --profile "$PROFILE"
+          else
+            python3 build.py "$MODE"
+          fi
       - name: Upload only public inputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: FontRoutes-Open-${{ matrix.profile }}-inputs
-          path: dist/FontRoutes-Open-${{ matrix.profile }}-inputs-*
+          name: FontRoutes-Open-${{ matrix.artifact }}
+          path: dist/FontRoutes-Open-${{ matrix.artifact }}-*
           if-no-files-found: error
           retention-days: 7

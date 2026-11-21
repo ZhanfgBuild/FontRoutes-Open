@@ -10,9 +10,12 @@
         "op13-full",
         "op6-slim"
       ],
-      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
-      "sha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
-      "license": "NotoSans-OFL-1.1.txt"
+      "url": "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSans-v2.015/NotoSans-v2.015.zip",
+      "sha256": "478c558ea716033cd60c03438f628dfa75694dcf6b5f6d505a2f05fd2b4f3823",
+      "license": "NotoSans-OFL-1.1.txt",
+      "version": "2.015",
+      "archive_sha256": "0c34df072a3fa7efbb7cbf34950e1f971a4447cffe365d3a359e2d4089b958f5",
+      "member": "NotoSans/hinted/ttf/NotoSans-Regular.ttf"
     },
     {
       "family": "fontroutes-open-sans",
@@ -22,9 +25,12 @@
       "profiles": [
         "op13-full"
       ],
-      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-Bold.ttf",
-      "sha256": "c976e4b1b99edc88775377fcc21692ca4bfa46b6d6ca6522bfda505b28ff9d6a",
-      "license": "NotoSans-OFL-1.1.txt"
+      "url": "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSans-v2.015/NotoSans-v2.015.zip",
+      "sha256": "1df075a380fc7cb898acf64c1f7b3b4dd780de3caa860178bf929de35817a913",
+      "license": "NotoSans-OFL-1.1.txt",
+      "version": "2.015",
+      "archive_sha256": "0c34df072a3fa7efbb7cbf34950e1f971a4447cffe365d3a359e2d4089b958f5",
+      "member": "NotoSans/hinted/ttf/NotoSans-Bold.ttf"
     },
     {
       "family": "fontroutes-open-mono",
@@ -34,9 +40,12 @@
       "profiles": [
         "op13-full"
       ],
-      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSansMono/NotoSansMono-Regular.ttf",
-      "sha256": "d9e2b23d19f8230be7146f409a52b1d23117e635e28f2e2892cf91b7382f325b",
-      "license": "NotoSans-OFL-1.1.txt"
+      "url": "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSansMono-v2.014/NotoSansMono-v2.014.zip",
+      "sha256": "65b5e2b2c4a1fba9ae8be1f026cb35b03dcb8886d9b2a4147054fde12f7e767d",
+      "license": "NotoSansMono-OFL-1.1.txt",
+      "version": "2.014",
+      "archive_sha256": "090cf6c5e03f337a755630ca888b1fef463e64ae7b33ee134e9309c05f978732",
+      "member": "NotoSansMono/hinted/ttf/NotoSansMono-Regular.ttf"
     },
     {
       "family": "fontroutes-open-cjk-sc",
@@ -49,7 +58,8 @@
       ],
       "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf",
       "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
-      "license": "NotoSansCJK-OFL-1.1.txt"
+      "license": "NotoSansCJK-OFL-1.1.txt",
+      "version": "Sans2.004"
     },
     {
       "family": "fontroutes-open-math",
@@ -59,23 +69,82 @@
       "profiles": [
         "op13-full"
       ],
-      "url": "https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/stixtwomath/STIXTwoMath-Regular.ttf",
-      "sha256": "562551b15b836e6e01d1b7350909baf3c8c8d83260c1190fbf4544333e6936de",
-      "license": "STIXTwoMath-OFL-1.1.txt"
+      "url": "https://raw.githubusercontent.com/stipub/stixfonts/744a22a4dd626cd14d75728aef34fc8ad7c85db0/fonts/static_ttf/STIXTwoMath-Regular.ttf",
+      "sha256": "49b22767985171bce579307b21d98f4d35012fa39e316acc4ffcab8644dfb69b",
+      "license": "STIXTwoMath-OFL-1.1.txt",
+      "version": "2.13b171"
+    },
+    {
+      "family": "fontroutes-open-wenkai",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutesOpen-LXGWWenKai-Regular.ttf",
+      "profiles": [
+        "op13-full"
+      ],
+      "version": "1.530",
+      "asset_type": "release",
+      "url": "https://github.com/lxgw/LxgwWenKai/releases/download/v1.530/LXGWWenKai-Regular.ttf",
+      "sha256": "2d73eea94ad808999d90c0000c239a84a33b09d4bc6ab6c5b8bbf1eda8a7fc8b",
+      "license": "LXGWWenKai-OFL-1.1.txt"
     }
   ],
   "licenses": {
     "NotoSans-OFL-1.1.txt": {
-      "url": "https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/LICENSE",
-      "sha256": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb"
+      "version": "2.015",
+      "url": "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSans-v2.015/NotoSans-v2.015.zip",
+      "archive_sha256": "0c34df072a3fa7efbb7cbf34950e1f971a4447cffe365d3a359e2d4089b958f5",
+      "member": "OFL.txt",
+      "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a"
     },
     "NotoSansCJK-OFL-1.1.txt": {
       "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/LICENSE",
       "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
     },
     "STIXTwoMath-OFL-1.1.txt": {
-      "url": "https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/stixtwomath/OFL.txt",
+      "url": "https://raw.githubusercontent.com/stipub/stixfonts/744a22a4dd626cd14d75728aef34fc8ad7c85db0/OFL.txt",
       "sha256": "0c8825913b60d858aacdb33c4ca6660a7d64b0d6464702efbb19313f5765861a"
+    },
+    "NotoSansMono-OFL-1.1.txt": {
+      "version": "2.014",
+      "url": "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSansMono-v2.014/NotoSansMono-v2.014.zip",
+      "archive_sha256": "090cf6c5e03f337a755630ca888b1fef463e64ae7b33ee134e9309c05f978732",
+      "member": "OFL.txt",
+      "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a"
+    },
+    "LXGWWenKai-OFL-1.1.txt": {
+      "url": "https://raw.githubusercontent.com/lxgw/LxgwWenKai/4becfb4d5cf0c92cfdb60a6e9b504bda43315325/OFL.txt",
+      "sha256": "1a25e35da1031c6c3436fde545bb9cb5aca954e9873afe510c834b8b79bd21a0"
+    }
+  },
+  "libraries": {
+    "logos": {
+      "name": "Font Awesome Free Brands",
+      "version": "7.3.1",
+      "kind": "standalone trademark-bearing font",
+      "font": {
+        "filename": "Font-Awesome-Free-7-Brands-Regular-400.otf",
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/14c65a3747d0f3b751f15831fc719236aea8729d/otfs/Font%20Awesome%207%20Brands-Regular-400.otf",
+        "sha256": "0d1253642b9a55347cf6f020cedf47ac770379b76dd332db91ebe99fea7a06c2"
+      },
+      "license": {
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/14c65a3747d0f3b751f15831fc719236aea8729d/LICENSE.txt",
+        "sha256": "20c6f40715a567c97b80f6944beb8bb325835cab47ea7dcab89ee3b8e077eced"
+      }
+    },
+    "emoji": {
+      "name": "Noto Emoji 2D",
+      "version": "v2026-09-24-unicode18_0",
+      "kind": "standalone app-use font",
+      "font": {
+        "filename": "NotoColorEmoji-2D.ttf",
+        "url": "https://raw.githubusercontent.com/googlefonts/noto-emoji/e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e/2D/fonts/NotoColorEmoji.ttf",
+        "sha256": "15671215ab769fdc7162a045d56fd7d7e477c51b04e6b3c761d914d8fdd6cc44"
+      },
+      "license": {
+        "url": "https://raw.githubusercontent.com/googlefonts/noto-emoji/e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e/2D/fonts/LICENSE",
+        "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+      }
     }
   }
 }

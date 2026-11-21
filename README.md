@@ -2,23 +2,22 @@
 
 Independent, open-input font builder for **OnePlus 13 Full** and **OnePlus 6
 Slim** profiles. It does not import source, fonts, releases, ROM files, or Git
-history from any private project. The project code is MIT; bundled unmodified
-font bytes retain their SIL Open Font License 1.1 and upstream notices. This is
-not a vendor product or a drop-in replacement for a full private root module.
+history from any private project. Project code is MIT; unmodified font bytes
+retain their SIL Open Font License 1.1 and upstream notices. This is not a
+vendor product or a drop-in replacement for a private root module.
 
-| Profile | Exact public inputs | Local assembly target |
+| Profile | Locked public inputs | Candidate device range |
 | --- | --- | --- |
-| `op13-full` | Noto Sans Regular/Bold, Noto Sans Mono Regular, Noto Sans CJK SC Regular, STIX Two Math Regular | Listed OnePlus 13 product identifiers, SDK 35–37, and the exact local ROM XML/fingerprint used to assemble |
-| `op6-slim` | Noto Sans Regular and Noto Sans CJK SC Regular | Listed OnePlus 6 product identifiers on SDK 37 and the exact local ROM XML/fingerprint used to assemble |
+| `op13-full` | Noto Sans 2.015 Regular/Bold, Mono 2.014 Regular, CJK SC Sans2.004 Regular, STIX Two Math 2.13b171, LXGW WenKai 1.530 Regular | Listed OnePlus 13 product identifiers, SDK 35–37 |
+| `op6-slim` | Noto Sans 2.015 Regular and CJK SC Sans2.004 Regular | Listed OnePlus 6 product identifiers, SDK 37 |
 
-Product/SDK allowlists are **validation gates**, not a compatibility claim.
-Neither profile reproduces private fonts, Apple/vendor glyph extensions,
-third-party root binaries, custom Emoji, automatic system routing, or the full
-historical weight/fallback suite. OEM default fonts and Emoji are not changed.
-Slim uses two font faces only; the broadly covered CJK face still dominates
-size.
+The CJK Sans pin stays on Sans2.004; the newer release in the CJK repository
+is the separate Serif family. Slim uses two faces; the broad CJK face accounts
+for most of its size. These allowlists are **gates, not proven compatibility**.
+No private Apple/OEM fonts, OEM or community logo assets, boot binaries, custom
+default Emoji or forced system-wide fallback are included.
 
-## Build public inputs
+## Build public inputs and optional app libraries
 
 Python 3.11+; building from upstream needs HTTPS.
 
@@ -26,31 +25,46 @@ Python 3.11+; building from upstream needs HTTPS.
 python3 -m unittest discover -s tests -v
 python3 build.py inputs --profile op13-full
 python3 build.py inputs --profile op6-slim
+python3 build.py logos   # optional Font Awesome Free Brands 7.3.1
+python3 build.py emoji   # optional Noto Emoji 2D, Unicode 18
 ```
 
-These produce two public inputs ZIPs and SHA-256 sidecars in `dist/`. **Do not
-flash the inputs ZIPs.** They contain font assets, the exact OFL notices, and a
-source manifest. Every source and license is pinned to an upstream commit and
-a SHA-256 in `fonts.lock.json`. The Actions matrix tests and builds both profiles
-independently, uploads only `dist/` inputs, and has no release/publish step.
+The four commands produce independent ZIPs and SHA-256 sidecars in `dist/`.
+**None can be flashed.** Each contains original public font bytes, upstream
+notices and a source manifest. GitHub Actions runs all four builds; it uploads
+only these inputs and never creates releases. The lock pins raw files to
+commits; where upstream ships generated binaries only in release assets, it
+pins archive and selected member digests. The two downloads are not trusted by
+tag name alone. See [the source lock](fonts.lock.json).
+
+The Font Awesome Brands archive is a **standalone, opt-in app asset**. The
+font's open license does not grant rights to third-party trademarks. Use
+individual marks only to represent their owners; do not imply affiliation.
+See [Font Awesome's license](https://github.com/FortAwesome/Font-Awesome/blob/14c65a3747d0f3b751f15831fc719236aea8729d/LICENSE.txt).
+Neither the brand font nor Noto Emoji 2D is included in either phone profile or
+the mounted module; there is no system PUA aliasing or default Emoji replacement.
+The 3D build and manufacturer-specific logo/fallback libraries are out of scope.
 
 ## Optional: assemble a private local test module
 
-This step is deliberately unavailable in hosted CI. A local test module
-contains a configuration **derived from the phone's own ROM**, never part of
-a public input ZIP. Keep that module and all ROM inputs off GitHub and unshared.
+The test module contains a configuration **derived from the phone's own ROM**.
+Keep it and all ROM inputs off GitHub and unshared. The local module builder
+never runs in hosted CI. Backup and recovery access are prerequisites; disable
+competing font modules and reboot first.
 
-The intended test route is **KernelSU Manager app** with an already-working
-systemless mount setup. Do not install a manager or mount provider merely to
-follow this guide. This builder was tested with synthetic ROM XML and mocked
-installer checks only, **not** on a physical device, specific ColorOS/custom
-ROM, Magisk, another root manager, or recovery flashing. Before selecting the
-result in KernelSU, confirm backup and recovery access, disable competing font
-modules, and reboot. Disable this local module before any OTA or ROM switch. Do
-not proceed if the stock ROM has no readable `/system/etc/font_fallback.xml`.
+**Target: KernelSU Manager app only, with a working system mount backend.**
+Current KernelSU needs a working metamodule such as meta-overlayfs to mount
+`system/`. The installer checks the expected active metamodule marker; this
+does not prove that the actual mount works. For a device already known to use a
+legacy KernelSU built-in mount, explicitly select
+`--mount-backend ksu-legacy-unverified`. That backend is unverified and does
+not skip product, SDK, ROM identity or hash checks. Magisk, APatch, custom
+recovery flashing, and physical-device acceptance were not tested.
 
-Capture from the specific device with ADB **only if you already have
-authorized ADB access**. These commands read, not modify, the phone.
+### 1. Capture and preflight
+
+Use these commands only if you already have authorized ADB access. These commands
+read the phone; they do not install anything.
 
 ```sh
 mkdir -p rom
@@ -61,40 +75,61 @@ adb shell getprop ro.build.version.sdk
 adb shell sha256sum /system/etc/font_fallback.xml
 ```
 
-Use the reported device value, SDK, and the 64-digit digest. Example placeholders
-are not defaults:
+Use the returned device, SDK and 64-digit digest below:
 
 ```sh
-python3 build.py local-module \
-  --profile op6-slim \
-  --inputs-zip dist/FontRoutes-Open-op6-slim-inputs-0.1.0.zip \
+python3 build.py doctor --profile op6-slim \
+  --inputs-zip dist/FontRoutes-Open-op6-slim-inputs-0.2.0.zip \
   --product DEVICE_FROM_GETPROP --sdk SDK_FROM_GETPROP \
   --rom-xml rom/font_fallback.xml --rom-xml-sha256 ROM_SHA256 \
-  --fingerprint-file rom/fingerprint.txt --i-accept-local-rom-overlay
+  --fingerprint-file rom/fingerprint.txt
 ```
 
-For OnePlus 13, select `op13-full` and the matching input ZIP. Alternatively omit
-`--inputs-zip` to download assets again from the same public lock. Local output
-goes under `local-dist/` and is prominently marked `LOCAL-DO-NOT-SHARE`.
+For OnePlus 13 use `op13-full` and its matching ZIP. The read-only doctor
+validates the supplied snapshot, selected profile and optional public ZIP. Its
+report does not include the fingerprint or device hashes and cannot claim
+actual kernel mounting. It fails on a mismatched digest, unknown XML layout
+or conflicting family, alias target or `fallbackFor` relationship.
 
-The builder inserts new **named** families at the end of the supplied
-`familyset`. It preserves the original XML bytes, existing file links, named
-families, alias references, fallback order and variable axes; conflicts with
-an existing route name, alias target or `fallbackFor` are rejected. AOSP named
-families are opt-in, and OEM customization can still affect registration.
-This **does not change system defaults** or force unrelated apps to select
-these fonts. A test app can explicitly select `fontroutes-open-sans`,
-`fontroutes-open-cjk-sc`, or on Full `fontroutes-open-mono` and
-`fontroutes-open-math`. Named-family or cross-process availability still
-needs device verification.
+On Android 15 / SDK 35, [AOSP chooses through a runtime flag](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1/graphics/java/android/graphics/fonts/SystemFonts.java).
+Verify which file your build **actually reads** and add
+`--confirm-api35-active-config` to doctor and assembly. File presence is not
+proof, even when both exist. Android 16/17 AOSP uses the modern path for normal
+startup, not an automatic fallback to legacy if that file is absent.
 
-The installer checks the exact current device, SDK, fingerprint and baseline
-XML SHA-256 before declaring success. It does not write the system partition,
-delete caches, install a boot hook, alter SELinux, or touch Google Play
-Services. This gate runs at **install** time, not after future OTAs. Device
-acceptance still requires boot/reboot coverage, app selection, Google/Play
-cold starts, and rollback checks. Use the root manager's disable/uninstall
-path or your preverified recovery route if anything misbehaves.
+If a custom ROM **actually reads legacy `/system/etc/fonts.xml`** and the
+modern file is absent, capture and hash that legacy path instead and add
+`--rom-config fonts.xml --confirm-legacy-rom-path` to both doctor and assembly.
+Do not infer active routing merely from the presence of `fonts.xml`. The
+installer rejects the legacy route if modern `font_fallback.xml` exists.
+The builder will not overlay product/vendor font configs or blindly replace
+both files.
 
-Further reading: [AOSP font fallback](https://source.android.com/docs/core/fonts/custom-font-fallback)
-and [KernelSU mounting requirements](https://kernelsu.org/guide/metamodule.html).
+### 2. Assemble, then verify separately
+
+Only after preflight, rerun the same command with `local-module` in place of
+`doctor` and add `--i-accept-local-rom-overlay`. The output is an explicit
+`local-dist/*-LOCAL-DO-NOT-SHARE-*.zip`. Do not install it unless you accept
+local test risk and can recover. The installer stages only and verifies the
+selected ROM, manager, compatible product/SDK, backend marker, distinct
+font paths and staged file hashes. No whole-directory replacement, no hot
+install, boot scripts, system partition writes, SELinux changes or Google Play
+changes. Disable the module **and reboot before any OTA or ROM switch**.
+
+After a deliberate test install and reboot, compare read-only `adb shell
+sha256sum` results for only the exact absolute paths listed in the ZIP's
+`MOUNTED-SHA256SUMS.txt`. Matching the mounted bytes is not proof of rendering:
+check app font selection, two reboots, and Google/Play cold starts separately.
+If needed use KernelSU disable/uninstall or your preverified recovery route.
+
+The XML edit appends only new **named** families, preserving OEM XML bytes,
+existing file links/fallback order and variable axes. An app must select
+`fontroutes-open-sans` or `fontroutes-open-cjk-sc`; Full also offers
+`fontroutes-open-mono`, `fontroutes-open-math` and `fontroutes-open-wenkai`.
+System defaults are unchanged, and OEM customization may still affect app
+registration. Both local paths were tested on synthetic snapshots; none was
+flashed.
+
+References: [AOSP font fallback](https://source.android.com/docs/core/fonts/custom-font-fallback),
+[KernelSU module guide](https://kernelsu.org/guide/module.html), and
+[KernelSU mounting requirements](https://kernelsu.org/guide/metamodule.html).
