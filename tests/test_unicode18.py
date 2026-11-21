@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from xml.etree import ElementTree
 from unittest.mock import patch
 
 import build
@@ -9,6 +10,21 @@ import unicode18
 
 
 class Unicode18Test(unittest.TestCase):
+    def test_lxgw_seal_is_a_named_route_not_system_fallback(self):
+        row = next(r for r in unicode18.lock()["fonts"] if r["filename"] == "LXGWSeal-Regular.ttf")
+        original = b'<familyset><family name="sans-serif"><font>StockLatin.ttf</font></family><family><font>StockFallback.ttf</font></family></familyset>'
+        actual = build.add_families(original, [row])
+        routes = ElementTree.fromstring(actual)
+        self.assertEqual(routes[0].attrib, {"name": "sans-serif"})
+        self.assertEqual(routes[0].findtext("font"), "StockLatin.ttf")
+        self.assertEqual([family.findtext("font") for family in routes if not family.get("name")],
+                         ["StockFallback.ttf"])
+        self.assertEqual(routes[-1].get("name"), "fontroutes-open-seal-lxgw")
+        self.assertEqual(routes[-1].findtext("font"), "LXGWSeal-Regular.ttf")
+        self.assertEqual(row["expected_outline_count"], 165)
+        with self.assertRaisesRegex(ValueError, "collision"):
+            build.add_families(actual, [row])
+
     def test_age_delta_not_whole_repertoire(self):
         self.assertEqual(unicode18.age_delta(b"0041 ; 1.1\n1234..1235 ; 18.0 # delta\n", 2), {0x1234, 0x1235})
         with self.assertRaisesRegex(ValueError, "Overlapping"):

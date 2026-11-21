@@ -176,8 +176,7 @@ From the same pinned Python environment used for local logo assembly:
 
 The separate **non-flashable** Unicode 18 input ZIP includes unmodified OFL
 Alari Xuwasun Jurchen, Fairfax HD, GNU Unifont 18.0.01 (OFL selected per
-the exact upstream release), and a renamed Kaiyuan derivative with their
-notices. Kaiyuan is built from 1,197 human-approved historical outlines only:
+the exact upstream release), LXGW Seal v0.001-alpha.10.8 unmodified, and a renamed Kaiyuan derivative with their notices. Kaiyuan is built from 1,197 human-approved historical outlines only:
 the archive identifies the source edition and scan page for each glyph and
 includes the upstream approval table. No unreviewed alignments or upstream
 build script are executed. It also includes
@@ -191,11 +190,11 @@ test variation/emoji sequences, typography accuracy, script shaping or Android
 runtime fallback. A diagnostic run with `--require-complete` exits nonzero
 until every graphic code point reaches that static outline threshold.
 
-Public Full + supplement measured **2,607 / 13,007** accepted outlines
-(**10,400 missing**) in the locked snapshot, compared with **59**
-from unmodified Full; 965 are Jurchen and its radicals. Of the total, **2,457**
+Public Full + supplement measured **2,691 / 13,007** accepted outlines
+(**10,316 missing**) in the locked snapshot, compared with **59**
+from unmodified Full; 965 are Jurchen and its radicals. Of the total, **2,541**
 are present in the Full files plus the optional Android named app faces.
-The remaining gaps are Seal (10,087), Archaic Cuneiform Numerals (311), and
+The remaining gaps are Seal (10,003), Archaic Cuneiform Numerals (311), and
 Tangut Supplement (2). One can separately compare the upstream AGPL Seal Sans
 reference with `unicode18.py --seal-reference`; this only writes a local cache
 and prints a separate outline count. It does not build an archive, include
@@ -204,9 +203,12 @@ that font in the public result, mount it, or certify its shapes/provenance.
 For local **OP13 Full** assembly only, you may pass
 `--unicode18-zip dist/FontRoutes-Open-unicode18-supplement-0.2.0.zip` to both
 `doctor` and `local-module`. Hashes of selected font and license payloads
-are checked. Three new app-selectable named families are appended:
+are checked. Four new app-selectable named families are appended:
 `fontroutes-open-jurchen`, `fontroutes-open-symbols-u18` (Fairfax), and
-`fontroutes-open-seal-reviewed` (reviewed Kaiyuan only).
+`fontroutes-open-seal-reviewed` (reviewed Kaiyuan only), and
+`fontroutes-open-seal-lxgw` (unmodified LXGW Seal). LXGW provides 165 checked
+Seal glyphs, 84 of which were absent from the previous package. None of the
+named fonts become the default system fallback.
 Unifont is available as a standalone app font in the input ZIP; it is not
 mounted to avoid broad fallback effects. OEM family order remains untouched,
 and neither Full nor Slim is automatically converted to system-wide Unicode

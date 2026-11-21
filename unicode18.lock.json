@@ -83,6 +83,20 @@
       "license": "Kaiyuan-OFL.txt",
       "license_sha256": "5c23557c389eabd42513b7a7bf2418879e1923f0c54d448b5f2805050fe85547",
       "provenance": "Deterministically compiled from 1,197 human-approved historical public-domain source traces only; see approval source and notices."
+    },
+    {
+      "family": "fontroutes-open-seal-lxgw",
+      "style": "normal",
+      "weight": 400,
+      "filename": "LXGWSeal-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/lxgw/LxgwSeal/5e78f03fba34ac1864573a684659ca884b4796aa/TTF/LXGWSeal-Regular.ttf",
+      "sha256": "06100c9d0afd79612dc0cf7ef8ddef997cce4ec22bf7d93f7cf238ca08bac29e",
+      "license": "LXGWSeal-OFL-1.1.txt",
+      "license_url": "https://raw.githubusercontent.com/lxgw/LxgwSeal/5e78f03fba34ac1864573a684659ca884b4796aa/OFL.txt",
+      "license_sha256": "014c5eec8e93d9deb222d0a47b4f44668f2f63b14f27448dcf468f52fd0cf910",
+      "expected_outline_block": "Seal",
+      "expected_outline_count": 165,
+      "version": "v0.001-alpha.10.8"
     }
   ],
   "seal_reference_only": {

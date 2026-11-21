@@ -196,6 +196,15 @@ def audit(spec, data, baseline, supplement):
         for cp in wanted.intersection(range(lo, hi + 1)):
             block_values[cp] = label
     mapped, strong, weak, fonts = outline_scan({**baseline, **supplement}, wanted)
+    for row in spec.get("fonts", []):
+        if "expected_outline_count" not in row:
+            continue
+        name = row["filename"]
+        expected_block = row["expected_outline_block"]
+        count = sum(name in providers for point, providers in strong.items()
+                    if block_values.get(point) == expected_block)
+        build.require(count == row["expected_outline_count"],
+                      f"{name}: {expected_block} outline count {count}, expected {row['expected_outline_count']}")
     cohorts = defaultdict(Counter)
     entries = []
     all_counts = Counter()
