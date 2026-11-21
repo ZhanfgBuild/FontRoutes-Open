@@ -1,0 +1,177 @@
+{
+  "unicode_version": "18.0.0",
+  "expected_delta": 13007,
+  "data": {
+    "DerivedAge.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/DerivedAge.txt",
+      "sha256": "58b04334e3a31f9612694bbc3f6bff4a302b7d424565bca9c47e30aa74f8dbac",
+      "mirrors": [
+        "https://raw.githubusercontent.com/unicode-org/unicodetools/725fb6055cd42915c74bcf77b91aa8fb8ef18669/unicodetools/data/ucd/18.0.0/DerivedAge.txt",
+        "https://unicode.org/Public/18.0.0/ucd/DerivedAge.txt"
+      ]
+    },
+    "UnicodeData.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt",
+      "sha256": "0736451de439ae7baf1425136617da495e09ee5afbe6e394374db7009ea08950",
+      "mirrors": [
+        "https://raw.githubusercontent.com/unicode-org/unicodetools/725fb6055cd42915c74bcf77b91aa8fb8ef18669/unicodetools/data/ucd/18.0.0/UnicodeData.txt",
+        "https://unicode.org/Public/18.0.0/ucd/UnicodeData.txt"
+      ]
+    },
+    "Blocks.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/Blocks.txt",
+      "sha256": "a58f8d322f3c5e254f9f97b1cbf76a454a7e02de6ac35619a5e4f27aaabfd553",
+      "mirrors": [
+        "https://raw.githubusercontent.com/unicode-org/unicodetools/725fb6055cd42915c74bcf77b91aa8fb8ef18669/unicodetools/data/ucd/18.0.0/Blocks.txt",
+        "https://unicode.org/Public/18.0.0/ucd/Blocks.txt"
+      ]
+    },
+    "LICENSE-UNICODE.txt": {
+      "url": "https://www.unicode.org/license.txt",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "vendored": "licenses/UNICODE-DATA-LICENSE.txt"
+    }
+  },
+  "fonts": [
+    {
+      "family": "fontroutes-open-jurchen",
+      "style": "normal",
+      "weight": 400,
+      "filename": "AlariXuwasunJurchen-Regular.otf",
+      "url": "https://raw.githubusercontent.com/mkpoli/jurchen-input/afee0a0b98f042d1070d29ab6bd1aea85f09ab83/data/alari/AlariXuwasunJurchen-Regular.otf",
+      "sha256": "41c71fc276e80044034e9719779c7cbcb2ec9f4329e49eae9e37d27b06469df7",
+      "license": "AlariXuwasunJurchen-OFL-1.1.txt",
+      "license_url": "https://raw.githubusercontent.com/mkpoli/jurchen-input/afee0a0b98f042d1070d29ab6bd1aea85f09ab83/app/public/fonts/OFL-AlariXuwasunJurchen.txt",
+      "license_sha256": "adcffd3589fc1f88d7330d3a078f11f70f7388d9ec9f9faf6de2f1b2a9ee99b5"
+    },
+    {
+      "family": "fontroutes-open-symbols-u18",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FairfaxHD.ttf",
+      "url": "https://raw.githubusercontent.com/kreativekorp/open-relay/3fd892de31bb7903e736ba53ee2b5c3e923b2882/FairfaxHD/FairfaxHD.ttf",
+      "sha256": "8ed5c84fa50fd02f145026da522b30519b1637222372d1b47b721cd021fc79ce",
+      "license": "FairfaxHD-OFL-1.1.txt",
+      "license_url": "https://raw.githubusercontent.com/kreativekorp/open-relay/3fd892de31bb7903e736ba53ee2b5c3e923b2882/FairfaxHD/OFL.txt",
+      "license_sha256": "f41c62b00b213a055f606b635451ee8aeb3f793a5d3846cc22ceee19a7dbb6db"
+    },
+    {
+      "filename": "unifont-18.0.01.otf",
+      "mount": false,
+      "asset_type": "unifont",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf",
+      "sha256": "88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2",
+      "license": "GNU-Unifont-18.0.01-OFL-1.1.txt",
+      "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+    },
+    {
+      "filename": "unifont_upper-18.0.01.otf",
+      "mount": false,
+      "asset_type": "unifont",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont_upper-18.0.01.otf",
+      "sha256": "472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391",
+      "license": "GNU-Unifont-18.0.01-OFL-1.1.txt",
+      "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+    },
+    {
+      "family": "fontroutes-open-seal-reviewed",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutesReviewedSeal-Regular.ttf",
+      "asset_type": "kaiyuan-reviewed",
+      "sha256": "f667d81b192de7a0043272b30eec695b397fb3353a8c90a856036331e2324912",
+      "license": "Kaiyuan-OFL.txt",
+      "license_sha256": "5c23557c389eabd42513b7a7bf2418879e1923f0c54d448b5f2805050fe85547",
+      "provenance": "Deterministically compiled from 1,197 human-approved historical public-domain source traces only; see approval source and notices."
+    },
+    {
+      "family": "fontroutes-open-seal-lxgw",
+      "style": "normal",
+      "weight": 400,
+      "filename": "LXGWSeal-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/lxgw/LxgwSeal/5e78f03fba34ac1864573a684659ca884b4796aa/TTF/LXGWSeal-Regular.ttf",
+      "sha256": "06100c9d0afd79612dc0cf7ef8ddef997cce4ec22bf7d93f7cf238ca08bac29e",
+      "license": "LXGWSeal-OFL-1.1.txt",
+      "license_url": "https://raw.githubusercontent.com/lxgw/LxgwSeal/5e78f03fba34ac1864573a684659ca884b4796aa/OFL.txt",
+      "license_sha256": "014c5eec8e93d9deb222d0a47b4f44668f2f63b14f27448dcf468f52fd0cf910",
+      "expected_outline_block": "Seal",
+      "expected_outline_count": 165,
+      "version": "v0.001-alpha.10.8"
+    },
+    {
+      "family": "fontroutes-open-cuneiform-numerals",
+      "style": "normal",
+      "weight": 400,
+      "filename": "ArchaicCuneiformNumerals.ttf",
+      "asset_type": "embedded-ofl",
+      "url": "https://raw.githubusercontent.com/eggrobin/archaic-numerals/6a90d1304c77ab7cb941d351e93ec0893a6afba5/ArchaicCuneiformNumerals.ttf",
+      "sha256": "40697239340e87fce1fa397331850d9e16d4634c070b1979f9c81cd38d620f1b",
+      "license": "ArchaicCuneiformNumerals-OFL-1.1.txt",
+      "license_sha256": "79a198314d251827a233eccb9579f65def5ffb4845941b0c21d21260dd00c35e",
+      "embedded_family": "Archaic Cuneiform Numerals",
+      "exact_cmap_range": [
+        "12550",
+        "12686"
+      ],
+      "expected_outline_block": "Archaic Cuneiform Numerals",
+      "expected_outline_count": 311
+    },
+    {
+      "family": "fontroutes-open-tangut-trial",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutes-Tangut-IDS-Trial.ttf",
+      "asset_type": "tangut-ids-trial",
+      "sha256": "a9fcc8b7149035d419eafa8a882b92eb1535c73c0c4496834abcd1c168616c5a",
+      "license": "NotoSerifTangut-OFL-1.1.txt",
+      "license_sha256": "bd8b32c064be2225d55f878a689063c6f169ccd9e2792d7051f0d74cf4816f1b",
+      "expected_outline_block": "Tangut Supplement",
+      "expected_outline_count": 2,
+      "quality": "provisional",
+      "sources": {
+        "base_font": {
+          "url": "https://github.com/notofonts/tangut/releases/download/NotoSerifTangut-v2.170/NotoSerifTangut-v2.170.zip",
+          "archive_sha256": "741ef7bca66790c51c5f2efea3c291f5a82cc2e3992d9413a020aec26dbd75b1",
+          "member": "NotoSerifTangut/unhinted/ttf/NotoSerifTangut-Regular.ttf",
+          "sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91"
+        },
+        "license": {
+          "url": "https://github.com/notofonts/tangut/releases/download/NotoSerifTangut-v2.170/NotoSerifTangut-v2.170.zip",
+          "archive_sha256": "741ef7bca66790c51c5f2efea3c291f5a82cc2e3992d9413a020aec26dbd75b1",
+          "member": "OFL.txt",
+          "sha256": "bd8b32c064be2225d55f878a689063c6f169ccd9e2792d7051f0d74cf4816f1b"
+        },
+        "ids_references": [
+          "https://www.unicode.org/L2/L2025/25144-additional-tangut.pdf",
+          "https://www.unicode.org/L2/L2025/25165-wg2-n5314.pdf"
+        ],
+        "note": "Independently arranged OFL Noto components; no chart font data. Provisional pending specialist review."
+      }
+    }
+  ],
+  "seal_reference_only": {
+    "filename": "SealSans-Regular_v1.otf",
+    "url": "https://raw.githubusercontent.com/Ghimist/seal-sans/9372f0813770a605ec5ee068fc48660b231b3427/SealSans-Regular_v1.otf",
+    "sha256": "f4bd309fd421b158da4a18295354a21efc12090b54c30601da705dd4db4c6d63",
+    "license": "AGPL-3.0; local reference audit only",
+    "license_url": "https://raw.githubusercontent.com/Ghimist/seal-sans/9372f0813770a605ec5ee068fc48660b231b3427/LICENSE",
+    "license_sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+    "source_url": "https://github.com/Ghimist/seal-sans/tree/9372f0813770a605ec5ee068fc48660b231b3427"
+  },
+  "unifont_license_tar": {
+    "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/unifont-18.0.01.tar.gz",
+    "sha256": "eab60847aac34c8768765cecc7821faf50de2636187b452b9b5fa50a12b00bc3",
+    "member": "unifont-18.0.01/OFL-1.1.txt",
+    "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+  },
+  "kaiyuan_reviewed_source": {
+    "url": "https://codeload.github.com/frankslin/kaiyuan-small-seal-font/tar.gz/97433695858330ec9fdb7de9c4604da2f635eba6",
+    "sha256": "6249a03976bb0f3bc2fb5d13185d909b3444c1f90b8a7d56dfe8629d1d56577a",
+    "approved": 1197,
+    "approval_file_sha256": "826ca3d6a995b0d4c9d1dbc12e23431fe752671e61e4dd6b2f436ea17f1d10ba",
+    "upstream_notices": {
+      "Kaiyuan-THIRD-PARTY-NOTICES.md": "48bd455d80301c62c08256ba580f5cb193955f3a70f4ae49b519a04a03081c2e",
+      "Kaiyuan-Unicode-Data-License.txt": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+    }
+  }
+}

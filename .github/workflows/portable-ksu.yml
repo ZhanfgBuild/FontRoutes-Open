@@ -1,0 +1,54 @@
+name: Build standalone KernelSU modules
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    name: Build and simulate ${{ matrix.profile }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [op13-full, op6-slim]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: '1.24.11'
+          cache: false
+      - name: Test and build the static XML stager
+        env:
+          GO111MODULE: 'off'
+          CGO_ENABLED: '0'
+        run: |
+          go test ./installer -v
+          GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w -buildid=" -o fr-xml.arm64 ./installer
+          readelf -h -l fr-xml.arm64
+      - name: Build public unbranded module and simulate manager install
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qemu-user
+          python3 -m venv .portable-venv
+          .portable-venv/bin/python -m pip install -r requirements-logo.txt
+          .portable-venv/bin/python portable.py --profile "$PROFILE" --helper fr-xml.arm64
+          .portable-venv/bin/python tests/simulate_portable.py dist/FontRoutes-Open-"$PROFILE"-PUBLIC-KSU-0.3.1.zip "$PROFILE"
+      - name: Retain tested public unbranded install ZIP and checksum only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: FontRoutes-Open-${{ matrix.profile }}-PUBLIC-KSU
+          path: dist/FontRoutes-Open-${{ matrix.profile }}-PUBLIC-KSU-0.3.1.zip*
+          if-no-files-found: error
+          retention-days: 7
