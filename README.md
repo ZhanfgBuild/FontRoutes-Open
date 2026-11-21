@@ -176,7 +176,10 @@ From the same pinned Python environment used for local logo assembly:
 
 The separate **non-flashable** Unicode 18 input ZIP includes unmodified OFL
 Alari Xuwasun Jurchen, Fairfax HD, GNU Unifont 18.0.01 (OFL selected per
-the exact upstream release), LXGW Seal v0.001-alpha.10.8 unmodified, and a renamed Kaiyuan derivative with their notices. Kaiyuan is built from 1,197 human-approved historical outlines only:
+the exact upstream release), LXGW Seal v0.001-alpha.10.8, the original author-released Archaic Cuneiform
+Numerals and a renamed Kaiyuan derivative with their notices. The separate
+Tangut trial face composes two glyphs from pinned OFL Noto parts using the
+published IDS; both are provisional until specialist review. Kaiyuan is built from 1,197 human-approved historical outlines only:
 the archive identifies the source edition and scan page for each glyph and
 includes the upstream approval table. No unreviewed alignments or upstream
 build script are executed. It also includes
@@ -190,12 +193,13 @@ test variation/emoji sequences, typography accuracy, script shaping or Android
 runtime fallback. A diagnostic run with `--require-complete` exits nonzero
 until every graphic code point reaches that static outline threshold.
 
-Public Full + supplement measured **2,691 / 13,007** accepted outlines
-(**10,316 missing**) in the locked snapshot, compared with **59**
-from unmodified Full; 965 are Jurchen and its radicals. Of the total, **2,541**
+Public Full + supplement measured **3,004 / 13,007** accepted outlines
+(**10,003 missing**) in the locked snapshot, compared with **59**
+from unmodified Full; 965 are Jurchen and its radicals. Of the total, **2,854**
 are present in the Full files plus the optional Android named app faces.
-The remaining gaps are Seal (10,003), Archaic Cuneiform Numerals (311), and
-Tangut Supplement (2). One can separately compare the upstream AGPL Seal Sans
+The remaining static gaps are **10,003 Seal characters**. All 311 Archaic
+Cuneiform Numerals have exact original-font outlines. The two Tangut
+Supplement entries are counted separately as provisional in the JSON. One can separately compare the upstream AGPL Seal Sans
 reference with `unicode18.py --seal-reference`; this only writes a local cache
 and prints a separate outline count. It does not build an archive, include
 that font in the public result, mount it, or certify its shapes/provenance.
@@ -203,10 +207,12 @@ that font in the public result, mount it, or certify its shapes/provenance.
 For local **OP13 Full** assembly only, you may pass
 `--unicode18-zip dist/FontRoutes-Open-unicode18-supplement-0.2.0.zip` to both
 `doctor` and `local-module`. Hashes of selected font and license payloads
-are checked. Four new app-selectable named families are appended:
+are checked. The new app-selectable named families are appended:
 `fontroutes-open-jurchen`, `fontroutes-open-symbols-u18` (Fairfax), and
 `fontroutes-open-seal-reviewed` (reviewed Kaiyuan only), and
-`fontroutes-open-seal-lxgw` (unmodified LXGW Seal). LXGW provides 165 checked
+`fontroutes-open-seal-lxgw` (unmodified LXGW Seal),
+`fontroutes-open-cuneiform-numerals`, and `fontroutes-open-tangut-trial`.
+LXGW provides 165 checked
 Seal glyphs, 84 of which were absent from the previous package. None of the
 named fonts become the default system fallback.
 Unifont is available as a standalone app font in the input ZIP; it is not

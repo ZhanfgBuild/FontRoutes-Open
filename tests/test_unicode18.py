@@ -25,6 +25,21 @@ class Unicode18Test(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "collision"):
             build.add_families(actual, [row])
 
+    def test_cuneiform_and_tangut_are_distinct_named_faces(self):
+        locked = {r["filename"]: r for r in unicode18.lock()["fonts"]}
+        acn = locked["ArchaicCuneiformNumerals.ttf"]
+        tangut = locked["FontRoutes-Tangut-IDS-Trial.ttf"]
+        self.assertEqual(acn["exact_cmap_range"], ["12550", "12686"])
+        self.assertEqual(acn["expected_outline_count"], 311)
+        self.assertNotIn("quality", acn)
+        self.assertEqual(tangut["expected_outline_count"], 2)
+        self.assertEqual(tangut["quality"], "provisional")
+        old = b'<familyset><family><font>Old.ttf</font></family></familyset>'
+        routes = ElementTree.fromstring(build.add_families(old, [acn, tangut]))
+        self.assertEqual([item.findtext("font") for item in routes if not item.get("name")], ["Old.ttf"])
+        self.assertEqual({item.get("name") for item in routes if item.get("name")},
+                         {"fontroutes-open-cuneiform-numerals", "fontroutes-open-tangut-trial"})
+
     def test_age_delta_not_whole_repertoire(self):
         self.assertEqual(unicode18.age_delta(b"0041 ; 1.1\n1234..1235 ; 18.0 # delta\n", 2), {0x1234, 0x1235})
         with self.assertRaisesRegex(ValueError, "Overlapping"):

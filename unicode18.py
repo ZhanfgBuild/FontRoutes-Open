@@ -208,6 +208,7 @@ def audit(spec, data, baseline, supplement):
     cohorts = defaultdict(Counter)
     entries = []
     all_counts = Counter()
+    provisional = {row["filename"] for row in spec.get("fonts", []) if row.get("quality") == "provisional"}
     eligible = set(baseline) | {row["filename"] for row in spec.get("fonts", []) if row.get("mount", True)}
     base_count = sum(any(name in baseline for name in strong.get(cp, ())) for cp in wanted if general[cp] not in GRAPHIC_EXEMPT)
     named_count = sum(any(name in eligible for name in strong.get(cp, ())) for cp in wanted if general[cp] not in GRAPHIC_EXEMPT)
@@ -224,9 +225,13 @@ def audit(spec, data, baseline, supplement):
             status = "missing"
         all_counts[status] += 1
         cohorts[label][status] += 1
+        tentative = [name for name in strong.get(cp, []) if name in provisional]
+        if status == "outline" and tentative and not set(strong[cp]).difference(provisional):
+            all_counts["provisional_only"] += 1
         entries.append({
             "codepoint": f"U+{cp:04X}", "block": label, "category": cat, "status": status,
             **({"accepted_providers": strong[cp]} if strong.get(cp) else {}),
+            **({"provisional_providers": tentative} if tentative else {}),
             **({"rejected_providers": weak[cp]} if weak.get(cp) else {}),
         })
     return {
@@ -240,6 +245,7 @@ def audit(spec, data, baseline, supplement):
         "expected_age_delta": expected, "graphic_target": expected - all_counts["non_graphic"],
         "baseline_accepted_graphic_outlines": base_count,
         "named_eligible_accepted_graphic_outlines": named_count,
+        "provisional_only_accepted_graphic_outlines": all_counts["provisional_only"],
         "counts": {name: all_counts[name] for name in ("outline", "missing", "mapped_without_accepted_outline", "non_graphic")},
         "blocks": {name: dict(counts) for name, counts in sorted(cohorts.items())},
         "fonts": fonts, "entries": entries,
@@ -277,6 +283,28 @@ def supplement_assets(spec, cache, offline):
             for extra, digest in source["upstream_notices"].items():
                 build.require(build.digest(derived_notices[extra]) == digest, "Reviewed Seal upstream notice digest changed")
             notices.update(derived_notices)
+        elif row.get("asset_type") == "embedded-ofl":
+            from fontTools.ttLib import TTFont
+            fonts[name] = build.fetch_asset(row, cache, offline)
+            bounds = [int(point, 16) for point in row["exact_cmap_range"]]
+            expected = set(range(bounds[0], bounds[1] + 1))
+            with TTFont(io.BytesIO(fonts[name]), recalcTimestamp=False) as source:
+                cmap = source.getBestCmap()
+                build.require(set(cmap) == expected and len(set(cmap.values())) == len(expected),
+                              "Archaic Numerals cmap is not the exact 311 assigned code points")
+                names = source["name"]
+                copyright_text, license_text = names.getDebugName(0), names.getDebugName(13)
+                build.require(names.getDebugName(1) == row["embedded_family"] and copyright_text and license_text,
+                              "Missing expected original family or embedded OFL metadata")
+                build.require(all(set(t.cmap) <= expected for t in source["cmap"].tables if t.isUnicode()),
+                              "Archaic Numerals has unexpected extra Unicode mappings")
+                notices[license_name] = (copyright_text.strip() + "\n\n" + license_text.strip() + "\n").encode("utf-8")
+        elif row.get("asset_type") == "tangut-ids-trial":
+            from tangut_derived import derive
+            donor = build.fetch_asset(row["sources"]["base_font"], cache, offline)
+            notices[license_name] = build.fetch_asset(row["sources"]["license"], cache, offline)
+            fonts[name] = derive(donor, notices[license_name])
+            build.require(build.digest(fonts[name]) == row["sha256"], "Provisional Tangut font digest changed")
         elif row.get("asset_type") == "unifont":
             fonts[name] = pinned_download(row, cache, offline, UNIFONT_FILES, build.MAX_ASSET)
             if license_name not in notices:
@@ -350,7 +378,7 @@ def main():
             "limitations": "Glyph shapes and provenance are not approved for bundling. No ZIP, routing or mount.",
         }, sort_keys=True))
         return 2 if args.require_complete and len(strong) != len(seal_targets) else 0
-    print(json.dumps({k: report[k] for k in ("expected_age_delta", "graphic_target", "baseline_accepted_graphic_outlines", "named_eligible_accepted_graphic_outlines", "counts")}, sort_keys=True))
+    print(json.dumps({k: report[k] for k in ("expected_age_delta", "graphic_target", "baseline_accepted_graphic_outlines", "named_eligible_accepted_graphic_outlines", "provisional_only_accepted_graphic_outlines", "counts")}, sort_keys=True))
     name = f"FontRoutes-Open-unicode18-supplement-{build.VERSION}.zip"
     build.pack(args.out / name, {
         **{f"fonts/{filename}": value for filename, value in supplement.items()},

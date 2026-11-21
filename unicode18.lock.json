@@ -97,6 +97,56 @@
       "expected_outline_block": "Seal",
       "expected_outline_count": 165,
       "version": "v0.001-alpha.10.8"
+    },
+    {
+      "family": "fontroutes-open-cuneiform-numerals",
+      "style": "normal",
+      "weight": 400,
+      "filename": "ArchaicCuneiformNumerals.ttf",
+      "asset_type": "embedded-ofl",
+      "url": "https://raw.githubusercontent.com/eggrobin/archaic-numerals/6a90d1304c77ab7cb941d351e93ec0893a6afba5/ArchaicCuneiformNumerals.ttf",
+      "sha256": "40697239340e87fce1fa397331850d9e16d4634c070b1979f9c81cd38d620f1b",
+      "license": "ArchaicCuneiformNumerals-OFL-1.1.txt",
+      "license_sha256": "79a198314d251827a233eccb9579f65def5ffb4845941b0c21d21260dd00c35e",
+      "embedded_family": "Archaic Cuneiform Numerals",
+      "exact_cmap_range": [
+        "12550",
+        "12686"
+      ],
+      "expected_outline_block": "Archaic Cuneiform Numerals",
+      "expected_outline_count": 311
+    },
+    {
+      "family": "fontroutes-open-tangut-trial",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FontRoutes-Tangut-IDS-Trial.ttf",
+      "asset_type": "tangut-ids-trial",
+      "sha256": "a9fcc8b7149035d419eafa8a882b92eb1535c73c0c4496834abcd1c168616c5a",
+      "license": "NotoSerifTangut-OFL-1.1.txt",
+      "license_sha256": "bd8b32c064be2225d55f878a689063c6f169ccd9e2792d7051f0d74cf4816f1b",
+      "expected_outline_block": "Tangut Supplement",
+      "expected_outline_count": 2,
+      "quality": "provisional",
+      "sources": {
+        "base_font": {
+          "url": "https://github.com/notofonts/tangut/releases/download/NotoSerifTangut-v2.170/NotoSerifTangut-v2.170.zip",
+          "archive_sha256": "741ef7bca66790c51c5f2efea3c291f5a82cc2e3992d9413a020aec26dbd75b1",
+          "member": "NotoSerifTangut/unhinted/ttf/NotoSerifTangut-Regular.ttf",
+          "sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91"
+        },
+        "license": {
+          "url": "https://github.com/notofonts/tangut/releases/download/NotoSerifTangut-v2.170/NotoSerifTangut-v2.170.zip",
+          "archive_sha256": "741ef7bca66790c51c5f2efea3c291f5a82cc2e3992d9413a020aec26dbd75b1",
+          "member": "OFL.txt",
+          "sha256": "bd8b32c064be2225d55f878a689063c6f169ccd9e2792d7051f0d74cf4816f1b"
+        },
+        "ids_references": [
+          "https://www.unicode.org/L2/L2025/25144-additional-tangut.pdf",
+          "https://www.unicode.org/L2/L2025/25165-wg2-n5314.pdf"
+        ],
+        "note": "Independently arranged OFL Noto components; no chart font data. Provisional pending specialist review."
+      }
     }
   ],
   "seal_reference_only": {
