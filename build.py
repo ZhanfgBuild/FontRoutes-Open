@@ -355,10 +355,19 @@ def validate_rom(args, rows):
     return draft_xml, digest(fingerprint), expected
 
 
+def unicode18_inputs(args):
+    if args.unicode18_zip is None:
+        return [], {}, {}
+    require(args.profile == "op13-full", "Unicode 18 supplement is an opt-in Full add-on; Slim remains unchanged")
+    from unicode18 import load_module_inputs
+    return load_module_inputs(args.unicode18_zip)
+
+
 def doctor(args):
     """Check a supplied snapshot and optional input ZIP; never ADB, mount, or assemble."""
     rows, _ = profile_lock(args.profile)
-    validate_rom(args, rows)
+    extra_rows, _, _ = unicode18_inputs(args)
+    validate_rom(args, [*rows, *extra_rows])
     if args.inputs_zip:
         with tempfile.TemporaryDirectory() as stage:
             cache = Path(stage)
@@ -373,6 +382,7 @@ def doctor(args):
         "rom_config": ROM_CONFIGS[args.rom_config],
         "input_zip": "locked fonts/licenses verified" if args.inputs_zip else "not supplied; not verified",
         "kernel_su_backend": args.mount_backend,
+        "unicode18_supplement": ("verified opt-in named fonts" if extra_rows else "not requested"),
         "logo_fallback": ("disabled" if args.no_logo_fallback else
                           "one F8FF glyph appended after OEM fallback; runtime selection unverified"),
         "mount_status": "unverified; reboot and inspect on the phone",
@@ -447,7 +457,13 @@ def public_library(args):
 
 def local_profile(args, base, rows, fonts):
     require(args.i_accept_local_rom_overlay, "Local ROM overlay requires explicit opt-in")
-    xml, fingerprint_digest, expected_hash = validate_rom(args, rows)
+    extra_rows, extra_fonts, extra_notices = unicode18_inputs(args)
+    require(not set(fonts).intersection(extra_fonts), "Supplement tries to replace a base font")
+    if extra_rows:
+        fonts = {**fonts, **extra_fonts}
+        base.update({f"licenses/{name}": value for name, value in extra_notices.items()})
+        base["UNICODE18-SUPPLEMENT-SOURCES.json"] = encode_json(extra_rows)
+    xml, fingerprint_digest, expected_hash = validate_rom(args, [*rows, *extra_rows])
     base[f"system/etc/{args.rom_config}"] = xml
     if not args.no_logo_fallback:
         from logo_fallback import derive
@@ -490,6 +506,7 @@ def main():
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--inputs-zip", type=Path, help="Selected public inputs ZIP for offline local assembly")
+    parser.add_argument("--unicode18-zip", type=Path, help="Verified optional Unicode 18 supplement (Full local only)")
     parser.add_argument("--logos-zip", type=Path, help="Verified standalone Brands ZIP as an offline local logo source")
     parser.add_argument("--no-logo-fallback", action="store_true", help="Keep OEM font routing exactly as-is for U+F8FF")
     parser.add_argument("--rom-config", choices=ROM_CONFIGS, default="font_fallback.xml")
@@ -507,7 +524,7 @@ def main():
     args = parser.parse_args()
     default_args = (args.rom_config == "font_fallback.xml" and args.mount_backend == "ksu-metamodule"
                     and not args.confirm_legacy_rom_path and not args.confirm_api35_active_config
-                    and not args.no_logo_fallback and args.logos_zip is None)
+                    and not args.no_logo_fallback and args.logos_zip is None and args.unicode18_zip is None)
     if args.mode in ("inputs", "logos", "emoji"):
         require(default_args and not any((args.rom_xml, args.rom_xml_sha256, args.product, args.sdk,
                                         args.fingerprint_file, args.i_accept_local_rom_overlay, args.inputs_zip)),

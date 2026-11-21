@@ -31,7 +31,7 @@ python3 build.py emoji   # optional Noto Emoji 2D, Unicode 18
 
 The four commands produce independent ZIPs and SHA-256 sidecars in `dist/`.
 **None can be flashed.** Each contains original public font bytes, upstream
-notices and a source manifest. GitHub Actions runs all four builds; it uploads
+notices and a source manifest. GitHub Actions runs all four builds plus the Unicode 18 audit/supplement; it uploads
 only these inputs and never creates releases. The lock pins raw files to
 commits; where upstream ships generated binaries only in release assets, it
 pins archive and selected member digests. The two downloads are not trusted by
@@ -165,3 +165,44 @@ To assemble without network, provide both the matching `--inputs-zip` and
 `--logos-zip dist/FontRoutes-Open-logos-brand-use-0.2.0.zip`, and add
 `--offline` in local-module mode. To leave U+F8FF behavior untouched (and avoid
 the Python dependency), add `--no-logo-fallback` and omit `--logos-zip`.
+
+### Optional Unicode 18 delta supplement
+
+From the same pinned Python environment used for local logo assembly:
+
+```sh
+.logo-venv/bin/python unicode18.py
+```
+
+The separate **non-flashable** Unicode 18 input ZIP includes unmodified OFL
+Alari Xuwasun Jurchen, Fairfax HD, and GNU Unifont 18.0.01 (OFL selected per
+the exact upstream release) with their notices. It also includes
+`UNICODE18-AGE-DELTA-AUDIT.json`: the official, checksum-pinned UCD
+`Age == 18.0` set, per-codepoint status and providers, per-block totals and
+all gaps. The audit reads actual font cmaps and decomposed outlines, rejecting
+missing, empty, known tofu and high-duplicate placeholder-like outlines.
+No charts or private font files are used. This is new-in-18 coverage, **not**
+the entire Unicode repertoire or a font rendering certification. It does not
+test variation/emoji sequences, typography accuracy, script shaping or Android
+runtime fallback. A diagnostic run with `--require-complete` exits nonzero
+until every graphic code point reaches that static outline threshold.
+
+Public Full + supplement measured **1,416 / 13,007** accepted outlines
+(**11,591 missing**) in the initial locked snapshot, compared with **59**
+from unmodified Full; 965 are Jurchen and its radicals. Of the total, **1,266**
+are present in the Full files plus the optional Android named app faces.
+The majority of the remaining gaps are Seal (11,278 missing out of 11,328
+Seal assignments). One can separately compare the upstream AGPL Seal Sans
+reference with `unicode18.py --seal-reference`; this only writes a local cache
+and prints a separate outline count. It does not build an archive, include
+that font in the public result, mount it, or certify its shapes/provenance.
+
+For local **OP13 Full** assembly only, you may pass
+`--unicode18-zip dist/FontRoutes-Open-unicode18-supplement-0.2.0.zip` to both
+`doctor` and `local-module`. Hashes of selected font and license payloads
+are checked. Two new app-selectable named families are appended,
+`fontroutes-open-jurchen` and `fontroutes-open-symbols-u18` (Fairfax).
+Unifont is available as a standalone app font in the input ZIP; it is not
+mounted to avoid broad fallback effects. OEM family order remains untouched,
+and neither Full nor Slim is automatically converted to system-wide Unicode
+18 coverage. Slim inputs and assembly defaults are unchanged.

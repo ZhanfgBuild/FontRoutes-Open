@@ -1,0 +1,79 @@
+{
+  "unicode_version": "18.0.0",
+  "expected_delta": 13007,
+  "data": {
+    "DerivedAge.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/DerivedAge.txt",
+      "sha256": "58b04334e3a31f9612694bbc3f6bff4a302b7d424565bca9c47e30aa74f8dbac"
+    },
+    "UnicodeData.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt",
+      "sha256": "0736451de439ae7baf1425136617da495e09ee5afbe6e394374db7009ea08950"
+    },
+    "Blocks.txt": {
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/Blocks.txt",
+      "sha256": "a58f8d322f3c5e254f9f97b1cbf76a454a7e02de6ac35619a5e4f27aaabfd553"
+    },
+    "LICENSE-UNICODE.txt": {
+      "url": "https://www.unicode.org/license.txt",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
+    }
+  },
+  "fonts": [
+    {
+      "family": "fontroutes-open-jurchen",
+      "style": "normal",
+      "weight": 400,
+      "filename": "AlariXuwasunJurchen-Regular.otf",
+      "url": "https://raw.githubusercontent.com/mkpoli/jurchen-input/afee0a0b98f042d1070d29ab6bd1aea85f09ab83/data/alari/AlariXuwasunJurchen-Regular.otf",
+      "sha256": "41c71fc276e80044034e9719779c7cbcb2ec9f4329e49eae9e37d27b06469df7",
+      "license": "AlariXuwasunJurchen-OFL-1.1.txt",
+      "license_url": "https://raw.githubusercontent.com/mkpoli/jurchen-input/afee0a0b98f042d1070d29ab6bd1aea85f09ab83/app/public/fonts/OFL-AlariXuwasunJurchen.txt",
+      "license_sha256": "adcffd3589fc1f88d7330d3a078f11f70f7388d9ec9f9faf6de2f1b2a9ee99b5"
+    },
+    {
+      "family": "fontroutes-open-symbols-u18",
+      "style": "normal",
+      "weight": 400,
+      "filename": "FairfaxHD.ttf",
+      "url": "https://raw.githubusercontent.com/kreativekorp/open-relay/3fd892de31bb7903e736ba53ee2b5c3e923b2882/FairfaxHD/FairfaxHD.ttf",
+      "sha256": "8ed5c84fa50fd02f145026da522b30519b1637222372d1b47b721cd021fc79ce",
+      "license": "FairfaxHD-OFL-1.1.txt",
+      "license_url": "https://raw.githubusercontent.com/kreativekorp/open-relay/3fd892de31bb7903e736ba53ee2b5c3e923b2882/FairfaxHD/OFL.txt",
+      "license_sha256": "f41c62b00b213a055f606b635451ee8aeb3f793a5d3846cc22ceee19a7dbb6db"
+    },
+    {
+      "filename": "unifont-18.0.01.otf",
+      "mount": false,
+      "asset_type": "unifont",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf",
+      "sha256": "88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2",
+      "license": "GNU-Unifont-18.0.01-OFL-1.1.txt",
+      "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+    },
+    {
+      "filename": "unifont_upper-18.0.01.otf",
+      "mount": false,
+      "asset_type": "unifont",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont_upper-18.0.01.otf",
+      "sha256": "472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391",
+      "license": "GNU-Unifont-18.0.01-OFL-1.1.txt",
+      "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+    }
+  ],
+  "seal_reference_only": {
+    "filename": "SealSans-Regular_v1.otf",
+    "url": "https://raw.githubusercontent.com/Ghimist/seal-sans/9372f0813770a605ec5ee068fc48660b231b3427/SealSans-Regular_v1.otf",
+    "sha256": "f4bd309fd421b158da4a18295354a21efc12090b54c30601da705dd4db4c6d63",
+    "license": "AGPL-3.0; local reference audit only",
+    "license_url": "https://raw.githubusercontent.com/Ghimist/seal-sans/9372f0813770a605ec5ee068fc48660b231b3427/LICENSE",
+    "license_sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+    "source_url": "https://github.com/Ghimist/seal-sans/tree/9372f0813770a605ec5ee068fc48660b231b3427"
+  },
+  "unifont_license_tar": {
+    "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/unifont-18.0.01.tar.gz",
+    "sha256": "eab60847aac34c8768765cecc7821faf50de2636187b452b9b5fa50a12b00bc3",
+    "member": "unifont-18.0.01/OFL-1.1.txt",
+    "license_sha256": "869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded"
+  }
+}
