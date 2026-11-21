@@ -56,8 +56,9 @@ done
 [ ! -e "$MODPATH/system/etc" ] && [ ! -L "$MODPATH/system/etc" ] ||
   abort "Unexpected prebuilt font XML in the ZIP."
 mkdir "$MODPATH/system/etc" || abort "Cannot create staged config directory."
-set_perm "$MODPATH/bin/fr-xml" 0 0 0755
-set_perm "$MODPATH/post-fs-data.sh" 0 0 0755
+set_perm "$MODPATH/system/etc" 0 0 0755 || abort "Cannot set staged config directory permissions/context."
+set_perm "$MODPATH/bin/fr-xml" 0 0 0755 || abort "Cannot enable ARM64 stager permissions/context."
+set_perm "$MODPATH/post-fs-data.sh" 0 0 0755 || abort "Cannot enable boot guard permissions/context."
 hashes="$("$MODPATH/bin/fr-xml" "$rom" "$MODPATH/FAMILIES.xml" "$MODPATH/system/etc/$config")" ||
   abort "ROM XML refused. Disable overlapping font modules and retry; no live system files were changed."
 stock="${hashes%% *}"
@@ -65,9 +66,10 @@ patched="${hashes#* }"
 valid_hash "$stock" && valid_hash "$patched" || abort "XML stager did not return two SHA-256 values."
 actual="$(sha256sum "$rom")" || abort "Cannot recheck stock XML."
 [ "${actual%% *}" = "$stock" ] || abort "Stock XML changed while the package was being staged."
+set_perm "$MODPATH/system/etc/$config" 0 0 0644 || abort "Cannot label the generated font XML."
 actual="$(sha256sum "$MODPATH/system/etc/$config")" || abort "Cannot recheck staged XML."
 [ "${actual%% *}" = "$patched" ] || abort "Staged XML failed integrity verification."
-printf '%s\n%s\n%s\n' "$config" "$fp" "$stock" > "$MODPATH/ROM-GUARD.txt" ||
+printf '%s\n%s\n%s\n%s\n' "$config" "$fp" "$stock" "$patched" > "$MODPATH/ROM-GUARD.txt" ||
   abort "Cannot save ROM guard state."
 ui_print "FontRoutes staged @PROFILE@. Reboot; this is not a hot install."
 ui_print "Keep other font overlay modules disabled. Disable FontRoutes before OTA or ROM changes."

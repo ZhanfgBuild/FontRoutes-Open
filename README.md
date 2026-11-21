@@ -220,7 +220,7 @@ mounted to avoid broad fallback effects. OEM family order remains untouched,
 and neither Full nor Slim is automatically converted to system-wide Unicode
 18 coverage. Slim inputs and assembly defaults are unchanged.
 
-## Standalone KernelSU ZIPs (0.3.0)
+## Standalone KernelSU ZIPs (0.3.1)
 
 The **standalone KernelSU** workflow builds two complete install ZIPs, distinct from
 the earlier non-installable `*-inputs` and `*-supplement` archives. Unpack the
@@ -250,7 +250,7 @@ complete Unicode 18 repertoire. Broad audit-only Unifont, trial Tangut and
 unreviewed Seal are not routed. Public ZIPs do not add a trademark fallback.
 Use KernelSU Manager to disable or remove this module and reboot to roll back.
 Disable it before an OTA/ROM change; the documented pre-mount boot guard also
-sets `skip_mount` on a detected stock XML/fingerprint/provider mismatch, which
+sets `skip_mount` on a detected stock or staged XML/fingerprint/provider mismatch, which
 requires removal and reinstall on the new ROM. Do not install both editions.
 
 Actions checks the final ZIP and simulates on Linux with the packaged ARM64

@@ -38,7 +38,7 @@ def verify(path, profile, private):
 
 def scenario(path, profile, runner, *, sdk=None, product=None, provider=True, ambiguous=False, existing=False,
              corrupt=False, bad_xml=False, wrong_manager=False, wrong_abi=False, legacy_alias=False, symlink=False,
-             boot_change=None, expect_install=True, cold_guard=False, competing=False):
+             boot_change=None, expect_install=True, cold_guard=False, competing=False, label_error=False):
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         stage = tmp / "stage"
@@ -99,13 +99,13 @@ def scenario(path, profile, runner, *, sdk=None, product=None, provider=True, am
         methods = """
 abort() { printf '%s\\n' "$*" >&2; exit 21; }
 ui_print() { printf '%s\\n' "$*"; }
-set_perm() { chmod "$4" "$1"; }
+set_perm() { if [ "$FR_LABEL_ERROR" = true ] && [ "$1" = "$MODPATH/system/etc" ]; then return 1; fi; chmod "$4" "$1"; }
 getprop() { case "$1" in ro.product.device) printf '%s\\n' "$FR_PRODUCT";; ro.build.version.sdk) printf '%s\\n' "$FR_SDK";;
  ro.build.fingerprint) printf '%s\\n' "$FR_FINGERPRINT";; esac; }
 """
         env = dict(os.environ, MODPATH=str(stage), BOOTMODE="true", KSU="false" if wrong_manager else "true",
                    ARCH="arm" if wrong_abi else "arm64", FR_PRODUCT=product, FR_SDK=str(sdk),
-                   FR_FINGERPRINT="OEM/model/official-17-release-keys")
+                   FR_FINGERPRINT="OEM/model/official-17-release-keys", FR_LABEL_ERROR="true" if label_error else "false")
         run = subprocess.run(["sh", "-c", methods + customize], env=env, capture_output=True, text=True)
         assert (run.returncode == 0) == expect_install, (run.stdout, run.stderr)
         assert {str(p): p.read_bytes() for p in system.rglob("*") if p.is_file()} == before
@@ -116,6 +116,8 @@ getprop() { case "$1" in ro.product.device) printf '%s\\n' "$FR_PRODUCT";; ro.bu
         add = (stage / "FAMILIES.xml").read_bytes()
         at = previous.rindex(b"</familyset>")
         assert patched.read_bytes() == previous[:at] + add + previous[at:]
+        assert stat.S_IMODE(patched.stat().st_mode) == 0o644
+        assert stat.S_IMODE((stage / "system/etc").stat().st_mode) == 0o755
         boot = stage / "boot-fixture.sh"
         boot.write_text(methods + redirect((stage / "post-fs-data.sh").read_text()))
         if boot_change == "fingerprint":
@@ -126,6 +128,14 @@ getprop() { case "$1" in ro.product.device) printf '%s\\n' "$FR_PRODUCT";; ro.bu
             (overlay / "disable").touch()
         elif boot_change == "conflict":
             conflict()
+        elif boot_change == "staged":
+            patched.write_bytes(b"corrupted staged XML")
+        elif boot_change == "absent":
+            patched.unlink()
+        elif boot_change == "image":
+            image_xml = overlay / "mnt" / stage.name / "system/etc" / config
+            image_xml.parent.mkdir(parents=True)
+            image_xml.write_bytes(b"corrupted provider copy")
         elif boot_change == "guard":
             (stage / "ROM-GUARD.txt").unlink()
         if cold_guard:
@@ -145,11 +155,12 @@ def main():
     args = ap.parse_args()
     verify(args.zip, args.profile, args.private)
     for case in ({}, {"sdk": 37}, {"sdk": 36}, {"boot_change": "fingerprint"}, {"boot_change": "xml"},
-                 {"boot_change": "provider"}, {"boot_change": "conflict"}, {"boot_change": "guard"}, {"cold_guard": True}):
+                 {"boot_change": "provider"}, {"boot_change": "conflict"}, {"boot_change": "staged"}, {"boot_change": "absent"},
+                 {"boot_change": "image"}, {"boot_change": "guard"}, {"cold_guard": True}):
         scenario(args.zip, args.profile, args.runner, **case)
     for case in ({"sdk": 35}, {"sdk": 27}, {"sdk": 38}, {"product": "different-device"}, {"provider": False},
                  {"existing": True}, {"corrupt": True}, {"bad_xml": True}, {"wrong_manager": True},
-                 {"wrong_abi": True}, {"competing": True}, {"legacy_alias": True}, {"symlink": True}):
+                 {"wrong_abi": True}, {"competing": True}, {"label_error": True}, {"legacy_alias": True}, {"symlink": True}):
         scenario(args.zip, args.profile, args.runner, expect_install=False, **case)
     if args.profile == "op6-slim":
         scenario(args.zip, args.profile, args.runner, sdk=34, ambiguous=True, expect_install=False)

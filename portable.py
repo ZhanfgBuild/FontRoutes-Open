@@ -6,7 +6,7 @@ import struct
 import build
 import unicode18
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 HERE = Path(__file__).resolve().parent
 INSTALLER = HERE / "installer"
 
@@ -73,7 +73,7 @@ def module(profile, cache, offline, helper, private_logo=False):
         "SOURCES.json": build.encode_json(public_sources),
         "module.prop": (
             f"id=fontroutes-open-{profile}\nname=FontRoutes Open ({profile})\n"
-            f"version={VERSION}\nversionCode=300\nauthor=FontRoutes Open contributors\n"
+            f"version={VERSION}\nversionCode=301\nauthor=FontRoutes Open contributors\n"
             "description=Adds named fonts; stock fonts unchanged. Disable before OTA. Reboot after install.\n"
         ).encode(),
         "README.txt": (

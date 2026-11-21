@@ -44,11 +44,11 @@ jobs:
           python3 -m venv .portable-venv
           .portable-venv/bin/python -m pip install -r requirements-logo.txt
           .portable-venv/bin/python portable.py --profile "$PROFILE" --helper fr-xml.arm64
-          .portable-venv/bin/python tests/simulate_portable.py dist/FontRoutes-Open-"$PROFILE"-PUBLIC-KSU-0.3.0.zip "$PROFILE"
+          .portable-venv/bin/python tests/simulate_portable.py dist/FontRoutes-Open-"$PROFILE"-PUBLIC-KSU-0.3.1.zip "$PROFILE"
       - name: Retain tested public unbranded install ZIP and checksum only
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: FontRoutes-Open-${{ matrix.profile }}-PUBLIC-KSU
-          path: dist/FontRoutes-Open-${{ matrix.profile }}-PUBLIC-KSU-0.3.0.zip*
+          path: dist/FontRoutes-Open-${{ matrix.profile }}-PUBLIC-KSU-0.3.1.zip*
           if-no-files-found: error
           retention-days: 7
