@@ -219,3 +219,56 @@ Unifont is available as a standalone app font in the input ZIP; it is not
 mounted to avoid broad fallback effects. OEM family order remains untouched,
 and neither Full nor Slim is automatically converted to system-wide Unicode
 18 coverage. Slim inputs and assembly defaults are unchanged.
+
+## Standalone KernelSU ZIPs (0.3.0)
+
+The **standalone KernelSU** workflow builds two complete install ZIPs, distinct from
+the earlier non-installable `*-inputs` and `*-supplement` archives. Unpack the
+outer Actions artifact and choose the single inner ZIP for your phone in KernelSU
+Manager. No companion add-on, Python, network or ROM upload is needed on-device.
+
+| Standalone archive | Profile & Android API | Additional fonts |
+| --- | --- | --- |
+| `*-op13-full-PUBLIC-KSU-*` | OnePlus 13, 36–37 | Six base fonts, named Noto 2D Emoji, and five validated named Unicode 18 faces (Jurchen, Fairfax symbols, two Seal faces and Archaic Cuneiform Numerals) |
+| `*-op6-slim-PUBLIC-KSU-*` | OnePlus 6, 28–34 or 36–37 | Noto Sans Regular and Simplified Chinese Noto Sans CJK; no large extras or Unicode 18 pack |
+
+Both require ARM64 and an active system mount provider compatible with
+[KernelSU's documented metamodule contract](https://kernelsu.org/guide/metamodule.html).
+No support is claimed for Magisk/TWRP, older inline-only KernelSU, every
+custom provider, or every vendor ROM. API 35 is refused because Android 15 can
+select either font config by feature flag. For API 36–37, the package requires
+`font_fallback.xml` rather than guessing; for API 28–34 it requires `fonts.xml`
+and no modern fallback file. Unsupported or unreadable layouts fail closed.
+
+Disable/remove competing font overlay modules and reboot before installation or
+upgrading from another package. The module makes one byte-preserving additive
+edit to your local XML **in KernelSU's staging directory only**; it never writes
+the physical system partition or publishes your XML. It leaves existing OEM
+routes and system defaults alone. Fonts, including Emoji and Unicode 18, are
+named and require apps to select them; this is not a global substitution or
+complete Unicode 18 repertoire. Broad audit-only Unifont, trial Tangut and
+unreviewed Seal are not routed. Public ZIPs do not add a trademark fallback.
+Use KernelSU Manager to disable or remove this module and reboot to roll back.
+Disable it before an OTA/ROM change; the documented pre-mount boot guard also
+sets `skip_mount` on a detected stock XML/fingerprint/provider mismatch, which
+requires removal and reinstall on the new ROM. Do not install both editions.
+
+Actions checks the final ZIP and simulates on Linux with the packaged ARM64
+helper under QEMU and synthetic OEM XML. This validates ZIP integrity, staging,
+coexistence and failure guards, not Android SELinux, actual KernelSU mounting or
+app rendering on a phone. Reboot is required for a live mount.
+
+For a local developer build:
+
+```sh
+python3 -m pip install -r requirements-logo.txt
+GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build \
+  -trimpath -ldflags='-s -w -buildid=' -o fr-xml.arm64 ./installer
+python3 portable.py --profile op13-full --helper fr-xml.arm64
+```
+
+`--private-logo` with an explicit output directory outside this repository is
+for personal devices only, not public Actions or redistribution. It builds the
+independently checked one-codepoint U+F8FF fallback from licensed Font Awesome
+data, appends it after OEM fallbacks, and includes the OFL and modification
+notices; existing OEM coverage retains priority.
